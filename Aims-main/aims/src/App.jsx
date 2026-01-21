@@ -20,6 +20,13 @@ import AdvisorCourseStatus from "./pages/Advisor/AdvisorCourseStatus";
 import AdvisorDashboard from "./pages/Advisor/AdvisorDashboard";
 import AdvisorEnrollmentRequests from "./pages/Advisor/AdvisorEnrollmentRequests";
 
+// admin
+import AdminLayout from "./layout/AdminLayout";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import UserManagement from "./pages/Admin/UserManagement";
+import AuditLogs from "./pages/Admin/AuditLogs";
+import CreateUser from "./pages/Admin/CreateUser";
+
 // config
 import { ROUTES } from "@/config/constants";
 import StudentLayout from "./layout/StudentLayout";
@@ -74,6 +81,21 @@ export default function App() {
         <Route path="courses" element={<AdvisorCourseApprovals />} />
         <Route path="enrollments" element={<AdvisorEnrollmentRequests />} />
         <Route path="status" element={<AdvisorCourseStatus />} />
+      </Route>
+
+      {/* ADMIN */}
+      <Route
+        path="/admin/dashboard/*"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="create" element={<CreateUser />} />
+        <Route path="users" element={<UserManagement />} />
+        <Route path="logs" element={<AuditLogs />} />
       </Route>
 
       {/* FALLBACK */}

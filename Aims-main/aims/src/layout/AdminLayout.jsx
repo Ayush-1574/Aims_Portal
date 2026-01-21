@@ -1,19 +1,16 @@
-import { NavLink } from "react-router-dom";
-import { useEffect } from "react";
+import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 
-export default function AdvisorLayout({ children }) {
+export default function AdminLayout() {
   const { logout } = useAuth();
 
   const menu = [
-    { label: "Course Approvals", path: "/advisor/dashboard/courses" },
-    { label: "Enrollment Requests", path: "/advisor/dashboard/enrollments" },
-    { label: "Course Status", path: "/advisor/dashboard/status" },
+    { label: "Dashboard", path: "/admin/dashboard" },
+    { label: "Create User", path: "/admin/dashboard/create" },
+    { label: "User Management", path: "/admin/dashboard/users" },
+    { label: "Audit Logs", path: "/admin/dashboard/logs" },
   ];
-
-  useEffect(() => {
-    document.title = "Advisor Dashboard";
-  }, []);
 
   return (
     <div className="w-screen h-screen flex bg-gradient-to-br from-gray-50 to-gray-100">
@@ -22,11 +19,11 @@ export default function AdvisorLayout({ children }) {
       <aside className="w-64 h-full bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex flex-col shadow-2xl border-r border-slate-700">
         
         {/* Header */}
-        <div className="px-6 py-6 border-b border-slate-700">
+        <div className="px-6 py-6 border-b border-slate-700 backdrop-blur-sm">
           <div className="text-2xl font-bold text-white">
-            Advisor Panel
+            Admin Panel
           </div>
-          <p className="text-xs text-gray-400 mt-1">Academic Oversight</p>
+          <p className="text-xs text-gray-400 mt-1">System Management</p>
         </div>
 
         {/* Navigation */}
@@ -49,13 +46,13 @@ export default function AdvisorLayout({ children }) {
         </nav>
 
         {/* Logout */}
-        <div className="px-4 py-4 border-t border-slate-700">
-          <button
+        <div className="px-4 py-4 border-t border-slate-700 backdrop-blur-sm">
+          <Button
             onClick={logout}
-            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold transition-all duration-200 shadow-lg"
           >
             Logout
-          </button>
+          </Button>
         </div>
       </aside>
 
@@ -63,7 +60,7 @@ export default function AdvisorLayout({ children }) {
       <main className="flex-1 overflow-y-auto p-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            {children}
+            <Outlet />
           </div>
         </div>
       </main>

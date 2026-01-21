@@ -53,6 +53,7 @@ import connectDB from "./src/config/db.js";
 import authRoutes from "./src/routes/auth/index.js";
 import courseRoutes from "./src/routes/course/index.js";
 import enrollmentRoutes from "./src/routes/enrollmentRoute.js";
+import adminRoutes from "./src/routes/admin/index.js";
 import cookieParser from "cookie-parser";
 console.log("BACKEND FILE RUNNING");
 
@@ -74,7 +75,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use("/courses", courseRoutes);
 app.use("/enrollment", enrollmentRoutes);
-
+app.use("/admin", adminRoutes);
 
 app.use("/auth", authRoutes);
 

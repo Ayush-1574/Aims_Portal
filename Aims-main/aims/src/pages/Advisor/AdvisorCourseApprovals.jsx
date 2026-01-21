@@ -37,31 +37,71 @@ export default function AdvisorCourseApprovals() {
     loadData();
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return (
+    <div className="flex justify-center py-12">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium">Loading pending course approvals...</p>
+      </div>
+    </div>
+  );
 
   if (courses.length === 0)
-    return <div>No courses pending advisor approval.</div>;
+    return (
+      <div className="bg-blue-50 rounded-lg p-8 text-center border border-blue-200">
+        <p className="text-gray-600 font-medium">No courses pending advisor approval.</p>
+      </div>
+    );
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Course Approvals</h2>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Course Approvals</h1>
+        <p className="text-gray-600 mt-1">Review and approve new course offerings</p>
+      </div>
 
-      {courses.map(c => (
-        <div key={c._id} className="p-3 border rounded bg-white flex justify-between">
-          <div>
-            <p className="font-semibold">
-              {c.courseCode} — {c.title}
-            </p>
-            <p className="text-gray-600">Session: {c.session}</p>
-            <p className="text-gray-600 text-sm">{c.dept} — {c.ltp}</p>
-          </div>
+      <div className="space-y-4">
+        {courses.map(c => (
+          <div
+            key={c._id}
+            className="p-5 border-2 border-gray-200 rounded-lg bg-white hover:shadow-lg transition-shadow"
+          >
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex-1">
+                <p className="font-bold text-gray-900 text-lg">
+                  {c.courseCode} — {c.title}
+                </p>
+                <div className="mt-3 space-y-2">
+                  <p className="text-gray-600">
+                    <span className="font-medium">Session:</span> {c.session}
+                  </p>
+                  <p className="text-gray-600">
+                    <span className="font-medium">Department:</span> {c.dept}
+                  </p>
+                  <p className="text-gray-600">
+                    <span className="font-medium">L-T-P:</span> {c.ltp}
+                  </p>
+                </div>
+              </div>
 
-          <div className="space-x-2">
-            <Button onClick={() => approve(c._id)}>Approve</Button>
-            <Button variant="destructive" onClick={() => reject(c._id)}>Reject</Button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => approve(c._id)}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => reject(c._id)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors"
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

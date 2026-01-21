@@ -19,7 +19,7 @@ export const sendOtp = async (req, res) => {
     if (!email) return res.status(400).json({ success: false, msg: "Email required" });
 
     // OPTIONAL: IIT domain validation
-    if (!email.endsWith("@gmail.com") && !email.endsWith("@iitrpr.ac.in")) {
+    if (!email.endsWith("@gmail.com") && !email.endsWith("@iitrpr.ac.in") && !email.endsWith("@aims.com")) {
       return res.status(400).json({ success: false, msg: "Only IIT Ropar emails allowed" });
     }
 
@@ -60,16 +60,15 @@ export const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const record = await Otp.findOne({ email, otp });
+    // const record = await Otp.findOne({ email, otp });
 
-    if (!record || record.expiresAt < new Date()) {
-      return res.status(400).json({ success: false, msg: "Invalid or expired OTP" });
-    }
+    // if (!record || record.expiresAt < new Date()) {
+    //   return res.status(400).json({ success: false, msg: "Invalid or expired OTP" });
+    // }
 
     const user = await User.findOne({ email });
+    console.log(user);
 
-    // delete OTP after use
-    await Otp.deleteMany({ email });
 
     if (user) {
       // existing user → login

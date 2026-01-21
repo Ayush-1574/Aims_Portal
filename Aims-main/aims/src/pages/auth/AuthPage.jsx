@@ -70,6 +70,9 @@ export default function AuthPage() {
       case USER_ROLES.FACULTY_ADVISOR:
         navigate(ROUTES.ADVISOR_DASHBOARD);
         break;
+      case USER_ROLES.ADMIN:
+        navigate(ROUTES.ADMIN_DASHBOARD);
+        break;
       default:
         navigate(ROUTES.HOME);
     }

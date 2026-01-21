@@ -6,7 +6,8 @@ export const MAX_COURSE_CREDITS = 4;
 export const USER_ROLES = {
   STUDENT: 'student',
   INSTRUCTOR: 'instructor',
-  FACULTY_ADVISOR: 'faculty_advisor'
+  FACULTY_ADVISOR: 'faculty_advisor',
+  ADMIN: 'admin'
 };
 
 export const ENROLLMENT_STATUS = {
@@ -20,5 +21,13 @@ export const ROUTES = {
   STUDENT_DASHBOARD: '/student/dashboard',
   INSTRUCTOR_DASHBOARD: '/instructor/dashboard',
   ADVISOR_DASHBOARD: '/advisor/dashboard',
+  ADMIN_DASHBOARD: '/admin/dashboard',
   LOGOUT: '/logout'
+};
+
+export const ADMIN_ROUTES = {
+  DASHBOARD: '/admin/dashboard',
+  USERS: '/admin/dashboard/users',
+  ROLES: '/admin/dashboard/roles',
+  LOGS: '/admin/dashboard/logs'
 };

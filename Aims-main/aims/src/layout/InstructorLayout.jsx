@@ -7,9 +7,9 @@ export default function InstructorLayout({ children }) {
   const { logout } = useAuth();
 
   const menu = [
-    { label: "➕ Offer Course", path: "/instructor/dashboard/offer" },
-    { label: "📚 My Courses", path: "/instructor/dashboard/courses" },
-    { label: "👥 Enrollment Requests", path: "/instructor/dashboard/requests" },
+    { label: "Offer Course", path: "/instructor/dashboard/offer" },
+    { label: "My Courses", path: "/instructor/dashboard/courses" },
+    { label: "Enrollment Requests", path: "/instructor/dashboard/requests" },
   ];
 
   useEffect(() => {
