@@ -52,39 +52,39 @@ function OTPInput({ email, handleVerify, handleBack , handleSendOtpAgain  }) {
 };
 
   return (
-    <div className="w-full md:w-1/2 h-full flex flex-col justify-center bg-white px-8 md:px-16 lg:px-24 box-border">
+    <div className="w-full flex flex-col justify-center bg-white px-8 md:px-16 box-border">
 
       {/* BACK BUTTON */}
       <button
         onClick={handleBack}
-        className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-black/80 transition mb-6"
+        className="flex items-center gap-2 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition mb-6 w-fit"
       >
         ← Back
       </button>
 
-      <div className="max-w-sm mx-auto">
+      <div className="max-w-md mx-auto">
 
         {/* ICON */}
-        <div className="mb-6 flex justify-center">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
-            <span className="text-white text-2xl">🔒</span>
+        <div className="mb-8 flex justify-center">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
+            <span className="text-white text-4xl">🔐</span>
           </div>
         </div>
 
         {/* HEADING */}
-        <h1 className="text-3xl font-semibold text-center mb-2">
+        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">
           Verify Your Email
         </h1>
 
         {/* SUBTEXT */}
-        <p className="text-gray-600 text-center mb-6">
+        <p className="text-gray-600 text-center mb-8">
           Enter the 6-digit code sent to <br />
-          <span className="font-medium">{email}</span>
+          <span className="font-semibold text-gray-800">{email}</span>
         </p>
 
         {/* OTP BOXES */}
         <div
-          className="flex justify-center gap-3 mb-6"
+          className="flex justify-center gap-3 mb-8"
           onPaste={handlePaste}
         >
           {otp.map((val, i) => (
@@ -96,36 +96,39 @@ function OTPInput({ email, handleVerify, handleBack , handleSendOtpAgain  }) {
               value={val}
               onChange={(e) => handleChange(e.target.value, i)}
               onKeyDown={(e) => handleKeyDown(e, i)}
-              className="w-12 h-14 text-center text-2xl font-semibold border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-14 h-16 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
             />
           ))}
         </div>
 
         {/* TIMER */}
-        <div className="text-center mb-4 text-gray-500">
-          Time remaining: <span className="text-purple-600">{formatTime(timeLeft)}</span>
+        <div className="text-center mb-6">
+          <span className="text-gray-600">Time remaining: </span>
+          <span className={`font-bold text-lg ${timeLeft <= 10 ? 'text-red-600' : 'text-blue-600'}`}>
+            {formatTime(timeLeft)}
+          </span>
         </div>
-
-        {/* RESEND */}
-        <div className="flex justify-center mb-6">
-        <Button
-          disabled={timeLeft > 0}
-          onClick={handleResend}
-          className="bg-black text-white hover:bg-black/80 disabled:opacity-50"
-        >
-          Resend Code
-        </Button>
-      </div>
-
 
         {/* VERIFY */}
         <Button
           onClick={() => handleVerify(otp.join(""))}
           disabled={otp.join("").length !== 6}
-          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+          className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all mb-4 disabled:opacity-50"
         >
-          Verify OTP
+          ✓ Verify OTP
         </Button>
+
+        {/* RESEND */}
+        <div className="text-center">
+          <p className="text-gray-600 text-sm mb-3">Didn't receive the code?</p>
+          <Button
+            disabled={timeLeft > 0}
+            onClick={handleResend}
+            className="w-full bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium disabled:opacity-50 h-10"
+          >
+            {timeLeft > 0 ? `Resend in ${timeLeft}s` : '🔄 Resend Code'}
+          </Button>
+        </div>
       </div>
     </div>
   );

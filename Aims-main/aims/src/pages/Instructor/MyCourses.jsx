@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import {
-  Select, SelectItem, SelectTrigger, SelectValue, SelectContent
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
@@ -89,87 +86,142 @@ export default function MyCourses() {
     navigate(`/instructor/dashboard/enrolled/${courseId}`);
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center py-12">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-200 border-t-purple-600 mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium">Loading your courses...</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">My Offered Courses</h2>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-4xl font-bold mb-2 text-gray-900">📚 My Courses</h1>
+        <p className="text-gray-600">Manage your offered courses and enrollments</p>
+      </div>
 
       {/* Filters */}
-      <div className="flex gap-3 items-center">
-        <Input
-          className="w-64"
-          placeholder="Search code or title..."
-          value={filters.search}
-          onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
-        />
+      <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+        <h3 className="font-semibold text-gray-900 mb-4">🔍 Search & Filter</h3>
+        <div className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <Input
+              placeholder="Search by course code or title..."
+              value={filters.search}
+              onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              className="h-10"
+            />
+          </div>
 
-        <Select value={filters.session} onValueChange={(v)=> setFilters(prev => ({ ...prev, session: v }))}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Session" />
-          </SelectTrigger>
-          <SelectContent>
-            {sessions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
+          <div className="w-full md:w-48">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Session</label>
+            <select
+              value={filters.session}
+              onChange={e => setFilters(prev => ({ ...prev, session: e.target.value }))}
+              className="h-10 w-full px-4 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 bg-white cursor-pointer transition"
+            >
+              <option value="">All Sessions</option>
+              {sessions.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
 
-        <Select value={filters.status} onValueChange={(v)=> setFilters(prev => ({ ...prev, status: v }))}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {statuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
+          <div className="w-full md:w-48">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select
+              value={filters.status}
+              onChange={e => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              className="h-10 w-full px-4 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 bg-white cursor-pointer transition"
+            >
+              <option value="">All Statuses</option>
+              {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
 
-        <Button onClick={()=> setFilters({ search:"", session:"", status:"" })}>
-          Reset
-        </Button>
+          <Button 
+            onClick={()=> setFilters({ search:"", session:"", status:"" })}
+            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium h-10"
+          >
+            ↻ Reset
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
-      <Table className="bg-white rounded-lg border">
-        <TableHeader>
-          <TableRow className="bg-gray-100">
-            <TableHead>Code</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Session</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Pending</TableHead>
-            <TableHead>Enrolled</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
+      <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+        {filtered.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600 text-lg font-medium">No courses found</p>
+            <p className="text-gray-500 text-sm">Try adjusting your search filters</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gradient-to-r from-purple-50 to-pink-50 border-b-2 border-gray-200">
+                  <TableHead className="font-bold text-gray-900">Course Code</TableHead>
+                  <TableHead className="font-bold text-gray-900">Title</TableHead>
+                  <TableHead className="font-bold text-gray-900">Session</TableHead>
+                  <TableHead className="text-center font-bold text-gray-900">Status</TableHead>
+                  <TableHead className="text-center font-bold text-gray-900">📋 Pending</TableHead>
+                  <TableHead className="text-center font-bold text-gray-900">✓ Enrolled</TableHead>
+                  <TableHead className="text-right font-bold text-gray-900">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
 
-        <TableBody>
-          {filtered.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center text-gray-500 py-4">
-                No courses found.
-              </TableCell>
-            </TableRow>
-          ) : (
-            filtered.map((c) => (
-              <TableRow key={c._id}>
-                <TableCell>{c.courseCode}</TableCell>
-                <TableCell>{c.title}</TableCell>
-                <TableCell>{c.session}</TableCell>
-                <TableCell>{c.status}</TableCell>
-                <TableCell>{pending[c._id] || 0}</TableCell>
-                <TableCell>{enrolledCounts[c._id] || 0}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button size="sm" onClick={() => handleViewRequests(c._id)}>
-                    View Requests
-                  </Button>
-                  <Button size="sm" variant="outline" className = "text-white"onClick={() => handleViewEnrolled(c._id)}>
-                    View Enrolled
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+              <TableBody>
+                {filtered.map((c, idx) => (
+                  <TableRow 
+                    key={c._id}
+                    className={`border-b transition-colors hover:bg-purple-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                  >
+                    <TableCell className="font-semibold text-gray-900">{c.courseCode}</TableCell>
+                    <TableCell className="text-gray-700">{c.title}</TableCell>
+                    <TableCell className="text-gray-600">{c.session}</TableCell>
+                    <TableCell className="text-center">
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                        c.status === 'OPEN' ? 'bg-green-100 text-green-800' :
+                        c.status === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {c.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="inline-block bg-orange-100 text-orange-800 font-bold px-3 py-1 rounded-lg">
+                        {pending[c._id] || 0}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="inline-block bg-green-100 text-green-800 font-bold px-3 py-1 rounded-lg">
+                        {enrolledCounts[c._id] || 0}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleViewRequests(c._id)}
+                        className="bg-orange-600 hover:bg-orange-700 text-white text-xs"
+                      >
+                        Requests
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleViewEnrolled(c._id)}
+                        className="bg-green-600 hover:bg-green-700 text-white text-xs"
+                      >
+                        Enrolled
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

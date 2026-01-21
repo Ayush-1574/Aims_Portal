@@ -76,57 +76,59 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="w-screen h-screen flex overflow-hidden">
+    <div className="w-screen h-screen flex overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
       
-      {/* LEFT BACKGROUND */}
+      {/* LEFT BACKGROUND - Image */}
       <div
-        className="hidden md:block w-1/2 h-full bg-cover bg-center"
+        className="hidden lg:block w-1/2 h-full bg-cover bg-center"
         style={{ backgroundImage: `url('/bg.jpg')` }}
       >
         <div className="w-full h-full bg-white/10 backdrop-brightness-105"></div>
       </div>
 
       {/* RIGHT PANEL */}
-      {step === "email" && (
-        <EmailInput 
-          email={email}
-          setEmail={setEmail}
-          handleSubmit={handleSubmit}
-        />
-      )}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+        {step === "email" && (
+          <EmailInput 
+            email={email}
+            setEmail={setEmail}
+            handleSubmit={handleSubmit}
+          />
+        )}
 
-      {step === "otp" && (
-        <OTPInput
-          email={email}
-          handleBack={() => setStep("email")}
-          handleVerify={handleVerifyOTP}
-          handleSendOtpAgain={handleResendOtp}
-        />
-      )}
+        {step === "otp" && (
+          <OTPInput
+            email={email}
+            handleBack={() => setStep("email")}
+            handleVerify={handleVerifyOTP}
+            handleSendOtpAgain={handleResendOtp}
+          />
+        )}
 
-      {step === "register" && (
-        <Register
-          email={email}
-          roleHint={roleHint}
-          onBack={() => setStep("email")}
-          onComplete={async (role, data) => {
-            try {
-              const res = await signup({ email, role, data });
-              if (res.success) {
-                await refreshUser(); // <-- session refresh
-                redirectToDashboard(role);
-              } else {
-                alert(res.msg || "Signup failed");
+        {step === "register" && (
+          <Register
+            email={email}
+            roleHint={roleHint}
+            onBack={() => setStep("email")}
+            onComplete={async (role, data) => {
+              try {
+                const res = await signup({ email, role, data });
+                if (res.success) {
+                  await refreshUser(); // <-- session refresh
+                  redirectToDashboard(role);
+                } else {
+                  alert(res.msg || "Signup failed");
+                }
+              } catch (err) {
+                console.error(err);
+                alert("Signup failed");
               }
-            } catch (err) {
-              console.error(err);
-              alert("Signup failed");
-            }
-          }}
-        />
-      )}
+            }}
+          />
+        )}
 
-      {/* NOTE: not-found is skipped since backend handles existence */}
+        {/* NOTE: not-found is skipped since backend handles existence */}
+      </div>
     </div>
   );
 }
