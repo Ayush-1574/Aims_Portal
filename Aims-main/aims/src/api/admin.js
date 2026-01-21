@@ -39,12 +39,12 @@ export const fetchUserDetails = async (userId) => {
   }
 };
 
-// Create new user (Student/Instructor)
-export const createNewUser = async (name, email, role, data = {}) => {
+// Create new user (Student/Instructor/Faculty Advisor)
+export const createNewUser = async (formData) => {
   try {
     const res = await axios.post(
       `${API_BASE}/users`,
-      { name, email, role, data },
+      formData,
       { withCredentials: true }
     );
     return res.data;
@@ -110,20 +110,6 @@ export const bulkRoleConversion = async (userIds, newRole, reason) => {
     return res.data;
   } catch (err) {
     console.error("Error in bulk conversion:", err);
-    throw err;
-  }
-};
-
-// Audit Logs
-export const fetchAuditLogs = async (action = "", page = 1, limit = 20) => {
-  try {
-    const params = new URLSearchParams({ page, limit });
-    if (action) params.append("action", action);
-    
-    const res = await axios.get(`${API_BASE}/audit-logs?${params}`, { withCredentials: true });
-    return res.data;
-  } catch (err) {
-    console.error("Error fetching audit logs:", err);
     throw err;
   }
 };

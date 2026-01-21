@@ -24,7 +24,6 @@ import AdvisorEnrollmentRequests from "./pages/Advisor/AdvisorEnrollmentRequests
 import AdminLayout from "./layout/AdminLayout";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import UserManagement from "./pages/Admin/UserManagement";
-import AuditLogs from "./pages/Admin/AuditLogs";
 import CreateUser from "./pages/Admin/CreateUser";
 
 // config
@@ -95,7 +94,6 @@ export default function App() {
         <Route index element={<AdminDashboard />} />
         <Route path="create" element={<CreateUser />} />
         <Route path="users" element={<UserManagement />} />
-        <Route path="logs" element={<AuditLogs />} />
       </Route>
 
       {/* FALLBACK */}

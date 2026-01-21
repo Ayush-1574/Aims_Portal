@@ -14,6 +14,12 @@ const enrollmentSchema = new mongoose.Schema(
       required: true
     },
 
+    // Faculty advisor who approves (mapped by student's year + department)
+    faculty_advisor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+
     // NEW — unified state machine for workflow
     status: {
       type: String,

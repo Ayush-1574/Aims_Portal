@@ -1,10 +1,17 @@
 import Enrollment from "../models/Enrollment.js";
 import Course from "../models/course/course.js";
+import User from "../models/Auth/User.js";
 
 // STUDENT: request enrollment
 export const requestEnrollment = async (req, res) => {
   try {
     const { courseId } = req.body;
+
+    // Get student details to find matching faculty advisor
+    const student = await User.findById(req.user.userId);
+    if (!student) {
+      return res.status(404).json({ success: false, msg: "Student not found" });
+    }
 
     const existing = await Enrollment.findOne({
       course: courseId,
@@ -15,9 +22,17 @@ export const requestEnrollment = async (req, res) => {
       return res.status(400).json({ success: false, msg: "Already requested" });
     }
 
+    // Find faculty advisor with matching department and year
+    const advisor = await User.findOne({
+      role: "faculty_advisor",
+      advisor_department: student.department,
+      advisor_year: student.year
+    });
+
     const record = await Enrollment.create({
       course: courseId,
       student: req.user.userId,
+      faculty_advisor: advisor?._id || null,
       status: "PENDING_INSTRUCTOR"
     });
 

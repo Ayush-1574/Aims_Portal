@@ -9,7 +9,6 @@ export default function AdminLayout() {
     { label: "Dashboard", path: "/admin/dashboard" },
     { label: "Create User", path: "/admin/dashboard/create" },
     { label: "User Management", path: "/admin/dashboard/users" },
-    { label: "Audit Logs", path: "/admin/dashboard/logs" },
   ];
 
   return (

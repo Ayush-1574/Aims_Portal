@@ -10,7 +10,6 @@ import {
   deleteUser,
   toggleUserStatus,
   bulkRoleConversion,
-  getAuditLogs,
   createUser
 } from "../../controllers/admin/index.js";
 
@@ -33,8 +32,5 @@ router.delete("/users/:userId", deleteUser);
 
 // Bulk Operations
 router.post("/users/bulk/role-conversion", bulkRoleConversion);
-
-// Audit Logs
-router.get("/audit-logs", getAuditLogs);
 
 export default router;

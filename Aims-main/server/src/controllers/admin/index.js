@@ -1,6 +1,4 @@
 import User from "../../models/Auth/User.js";
-import AuditLog from "../../models/AuditLog.js";
-import { logAudit } from "../../middleware/admin.js";
 
 // Get dashboard statistics
 export const getDashboardStats = async (req, res) => {
@@ -140,18 +138,6 @@ export const changeUserRole = async (req, res) => {
 
     await user.save();
 
-    // Log the action
-    await logAudit(
-      req.user._id,
-      "change_role",
-      userId,
-      {
-        before: { role: previousRole },
-        after: { role: newRole }
-      },
-      reason,
-      req
-    );
 
     res.json({
       success: true,
@@ -180,19 +166,6 @@ export const deleteUser = async (req, res) => {
       return res.status(403).json({ success: false, msg: "Cannot delete admin users" });
     }
 
-    // Log the action (soft delete is better - just deactivate)
-    await logAudit(
-      req.user._id,
-      "delete_user",
-      userId,
-      {
-        before: { email: user.email, role: user.role },
-        after: null
-      },
-      reason,
-      req
-    );
-
     await User.findByIdAndDelete(userId);
 
     res.json({
@@ -218,18 +191,6 @@ export const toggleUserStatus = async (req, res) => {
 
     user.isActive = isActive;
     await user.save();
-
-    await logAudit(
-      req.user._id,
-      isActive ? "activate_user" : "deactivate_user",
-      userId,
-      {
-        before: { isActive: !isActive },
-        after: { isActive }
-      },
-      null,
-      req
-    );
 
     res.json({
       success: true,
@@ -264,19 +225,6 @@ export const bulkRoleConversion = async (req, res) => {
       }
     );
 
-    // Log the bulk action
-    await logAudit(
-      req.user._id,
-      "bulk_role_change",
-      null,
-      {
-        before: { count: userIds.length },
-        after: { count: userIds.length, role: newRole }
-      },
-      reason,
-      req
-    );
-
     res.json({
       success: true,
       msg: `${result.modifiedCount} users updated successfully`,
@@ -289,44 +237,21 @@ export const bulkRoleConversion = async (req, res) => {
 };
 
 // Get audit logs
-export const getAuditLogs = async (req, res) => {
-  try {
-    const { action, page = 1, limit = 20 } = req.query;
-    const skip = (page - 1) * limit;
 
-    let filter = {};
-    if (action) filter.action = action;
-
-    const logs = await AuditLog.find(filter)
-      .populate("adminId", "name email")
-      .populate("targetUserId", "name email role")
-      .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ createdAt: -1 });
-
-    const total = await AuditLog.countDocuments(filter);
-
-    res.json({
-      success: true,
-      data: {
-        logs,
-        pagination: {
-          total,
-          page: parseInt(page),
-          limit: parseInt(limit),
-          pages: Math.ceil(total / limit)
-        }
-      }
-    });
-  } catch (err) {
-    console.error("Error fetching audit logs:", err);
-    res.status(500).json({ success: false, msg: "Failed to fetch audit logs" });
-  }
-};
-// Create new user (Student/Instructor)
+// Create new user (Student/Instructor/Faculty Advisor)
 export const createUser = async (req, res) => {
   try {
-    const { name, email, role, data } = req.body;
+    const {
+      name,
+      email,
+      role,
+      entry_no,
+      department,
+      year,
+      semester,
+      advisor_department,
+      advisor_year
+    } = req.body;
 
     // Validate required fields
     if (!name || !email || !role) {
@@ -334,9 +259,9 @@ export const createUser = async (req, res) => {
     }
 
     // Validate role
-    const validRoles = ["student", "instructor"];
+    const validRoles = ["student", "instructor", "faculty_advisor", "admin"];
     if (!validRoles.includes(role)) {
-      return res.status(400).json({ success: false, msg: "Role must be student or instructor" });
+      return res.status(400).json({ success: false, msg: "Invalid role" });
     }
 
     // Check if user already exists
@@ -345,12 +270,39 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ success: false, msg: "User with this email already exists" });
     }
 
+    // Validate student fields
+    if (role === "student") {
+      if (!entry_no || !department || !year || !semester) {
+        return res.status(400).json({
+          success: false,
+          msg: "Entry number, department, year, and semester are required for students"
+        });
+      }
+    }
+
+    // Validate faculty advisor fields
+    if (role === "faculty_advisor") {
+      if (!advisor_department || !advisor_year) {
+        return res.status(400).json({
+          success: false,
+          msg: "Department and year are required for faculty advisors"
+        });
+      }
+    }
+
     // Create new user
     const newUser = await User.create({
       name,
       email,
       role,
-      data: data || {},
+      // Student fields
+      entry_no: role === "student" ? entry_no : undefined,
+      department: role === "student" ? department : undefined,
+      year: role === "student" ? parseInt(year) : undefined,
+      semester: role === "student" ? parseInt(semester) : undefined,
+      // Faculty Advisor fields
+      advisor_department: role === "faculty_advisor" ? advisor_department : undefined,
+      advisor_year: role === "faculty_advisor" ? parseInt(advisor_year) : undefined,
       isActive: true,
       roleHistory: [{
         role,
@@ -358,16 +310,6 @@ export const createUser = async (req, res) => {
         changedBy: req.user._id
       }]
     });
-
-    // Log the action
-    await logAudit(
-      req.user._id,
-      "create_user",
-      newUser._id,
-      { before: null, after: { name, email, role } },
-      "New user created",
-      req
-    );
 
     res.json({
       success: true,
@@ -381,6 +323,6 @@ export const createUser = async (req, res) => {
     });
   } catch (err) {
     console.error("Error creating user:", err);
-    res.status(500).json({ success: false, msg: "Failed to create user" });
+    res.status(500).json({ success: false, msg: "Failed to create user: " + err.message });
   }
 };

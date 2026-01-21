@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { fetchCourses, requestEnrollment } from "@/api/course";
 
 export default function CoursesPage() {
@@ -58,15 +57,13 @@ export default function CoursesPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2 text-gray-900">📚 Available Courses</h1>
+        <h1 className="text-3xl font-bold mb-2 text-gray-900">Available Courses</h1>
         <p className="text-gray-600">Search and enroll in courses offered this semester</p>
       </div>
 
       {/* FILTER SECTION */}
-      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          🔍 Filter Courses
-        </h3>
+      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter Courses</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
@@ -150,26 +147,26 @@ export default function CoursesPage() {
 
         {/* ACTION BUTTONS */}
         <div className="flex gap-3 mt-6">
-          <Button 
-            onClick={handleSearch} 
-            className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-medium px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all"
+          <button
+            onClick={handleSearch}
+            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors"
           >
-            🔎 Search Courses
-          </Button>
+            Search Courses
+          </button>
 
-          <Button 
-            onClick={handleReset} 
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium px-6 py-2.5 rounded-lg transition-all"
+          <button
+            onClick={handleReset}
+            className="px-6 py-2.5 bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold rounded-lg transition-colors"
           >
-            ↻ Reset Filters
-          </Button>
+            Reset Filters
+          </button>
         </div>
       </div>
 
       {/* RESULTS SECTION */}
       <div>
         <h3 className="text-2xl font-bold text-gray-900 mb-4">
-          {loading ? "⏳ Loading..." : `📋 Results (${courses.length} course${courses.length !== 1 ? 's' : ''})`}
+          {loading ? "Loading..." : `Results (${courses.length} course${courses.length !== 1 ? 's' : ''})`}
         </h3>
 
         {loading ? (
@@ -180,46 +177,50 @@ export default function CoursesPage() {
             </div>
           </div>
         ) : courses.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+          <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
             <p className="text-gray-600 text-lg font-medium">No courses found</p>
             <p className="text-gray-500">Try adjusting your search filters</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
-            {courses.map(c => (
-              <div 
-                key={c._id} 
-                className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200"
-              >
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-2xl font-bold text-blue-600">{c.courseCode}</span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        c.status === 'Open' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {c.status || 'Open'}
-                      </span>
+          <div className="grid grid-cols-1 gap-4">
+            {courses.map(c => {
+              const instructorName = c.instructor?.name || 'TBA';
+              
+              return (
+                <div
+                  key={c._id}
+                  className="bg-white border-2 border-gray-200 rounded-lg p-5 hover:shadow-lg transition-all"
+                >
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-xl font-bold text-blue-600">{c.courseCode}</span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          c.status === 'OPEN'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {c.status || 'OPEN'}
+                        </span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-3">{c.title}</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm text-gray-600">
+                        <div><span className="font-medium">Instructor:</span> {instructorName}</div>
+                        <div><span className="font-medium">Department:</span> {c.dept}</div>
+                        <div><span className="font-medium">Session:</span> {c.session}</div>
+                        <div><span className="font-medium">L-T-P:</span> {c.ltp}</div>
+                      </div>
                     </div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">{c.title}</h4>
-                    <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
-                      <div>👨‍🏫 <span className="font-medium">{c.instructor || 'TBA'}</span></div>
-                      <div>🏢 <span className="font-medium">{c.dept}</span></div>
-                      <div>📅 <span className="font-medium">{c.session}</span></div>
-                      <div>⏱️ <span className="font-medium">{c.ltp}</span></div>
-                    </div>
+                    <button
+                      onClick={() => handleEnroll(c._id)}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors whitespace-nowrap"
+                    >
+                      Enroll
+                    </button>
                   </div>
-                  <Button 
-                    onClick={() => handleEnroll(c._id)}
-                    className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-medium px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all whitespace-nowrap"
-                  >
-                    ✓ Enroll
-                  </Button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
