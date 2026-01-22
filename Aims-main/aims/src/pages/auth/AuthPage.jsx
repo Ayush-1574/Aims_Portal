@@ -32,7 +32,11 @@ export default function AuthPage() {
       const res = await verifyOtp(email, otp);
 
       if (res.user_exists) {
-        // backend has already set HttpOnly cookie with token
+        // Store token in sessionStorage for per-tab isolation
+        if (res.token) {
+          sessionStorage.setItem("token", res.token);
+          console.log("[AuthPage] Token stored in sessionStorage after login");
+        }
         // IMPORTANT: refresh session BEFORE redirect so dashboard gets user context
         await refreshUser();
         redirectToDashboard(res.role);
@@ -117,6 +121,11 @@ export default function AuthPage() {
               try {
                 const res = await signup({ email, role, data });
                 if (res.success) {
+                  // Store token in sessionStorage for per-tab isolation
+                  if (res.token) {
+                    sessionStorage.setItem("token", res.token);
+                    console.log("[AuthPage] Token stored in sessionStorage after signup");
+                  }
                   await refreshUser(); // <-- session refresh
                   redirectToDashboard(role);
                 } else {

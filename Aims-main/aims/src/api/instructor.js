@@ -5,6 +5,7 @@ export const offerCourseAPI = (course) =>
     courseCode: course.courseCode,
     title: course.title,
     dept: course.dept,
+    year: course.year,
     ltp: course.ltp,
     category: course.category,
     session: course.session

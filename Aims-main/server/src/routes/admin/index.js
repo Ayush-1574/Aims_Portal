@@ -7,8 +7,8 @@ import {
   getAllUsers,
   getUserDetails,
   changeUserRole,
+  updateUser,
   deleteUser,
-  toggleUserStatus,
   bulkRoleConversion,
   createUser
 } from "../../controllers/admin/index.js";
@@ -26,8 +26,8 @@ router.get("/dashboard/stats", getDashboardStats);
 router.post("/users", createUser);
 router.get("/users", getAllUsers);
 router.get("/users/:userId", getUserDetails);
+router.put("/users/:userId", updateUser);
 router.put("/users/:userId/role", changeUserRole);
-router.put("/users/:userId/status", toggleUserStatus);
 router.delete("/users/:userId", deleteUser);
 
 // Bulk Operations

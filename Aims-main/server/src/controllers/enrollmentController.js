@@ -161,6 +161,7 @@ export const getStudentEnrollments = async (req, res) => {
       title: e.course.title,
       ltp: e.course.ltp,
       semester: e.semester,
+      session: e.course.session,
       status: e.status,
       category: e.category,
       grade: e.grade,

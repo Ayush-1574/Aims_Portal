@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import UserDetailsCard from "@/components/UserDetailsCard";
 
 import { fetchAdvisorEnrollRequests } from "@/api/advisorEnroll";
 import { fetchInstructorEnrollRequests } from "@/api/instructorEnroll";
@@ -58,6 +59,8 @@ export default function AdvisorCourseStatus() {
 
   return (
     <div className="space-y-6">
+      <UserDetailsCard />
+
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Course Status</h1>
         <p className="text-gray-600 mt-1">View enrollment requests and status for all courses</p>

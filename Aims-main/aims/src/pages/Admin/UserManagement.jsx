@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchAllUsers, changeUserRole, deleteUser, toggleUserStatus } from "@/api/admin";
-import { Button } from "@/components/ui/button";
+import { fetchAllUsers, deleteUser, fetchUserDetails, updateUser } from "@/api/admin";
 import { Input } from "@/components/ui/input";
 
 export default function UserManagement() {
@@ -11,23 +10,23 @@ export default function UserManagement() {
   
   const [filters, setFilters] = useState({
     search: "",
-    role: "",
-    status: "all"
+    role: ""
   });
 
-  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [newRole, setNewRole] = useState("");
-  const [reason, setReason] = useState("");
-  const [modalError, setModalError] = useState("");
-  const [modalSuccess, setModalSuccess] = useState("");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState({});
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState("");
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   const loadUsers = async () => {
     setLoading(true);
     try {
       const res = await fetchAllUsers(filters, page, 10);
-      setUsers(res.data.users);
-      setTotalPages(res.data.pagination.pages);
+      setUsers(res.users);
+      setTotalPages(res.pagination.pages);
     } catch (err) {
       console.error("Failed to load users:", err);
     } finally {
@@ -64,6 +63,48 @@ export default function UserManagement() {
     }
   };
 
+  const handleViewDetails = async (user) => {
+    setLoadingDetails(true);
+    try {
+      const res = await fetchUserDetails(user._id);
+      setSelectedUser(res);
+      setEditFormData(res);
+      setIsEditMode(false);
+      setEditError("");
+      setEditSuccess("");
+      setShowDetailsModal(true);
+    } catch (err) {
+      setEditError("Failed to load user details");
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      setEditError("");
+      const res = await updateUser(selectedUser._id, editFormData);
+      // res is just the user object since API extracts res.data.data
+      if (res && res._id) {
+        // Update the selected user with the new data immediately
+        setSelectedUser(res);
+        setEditFormData(res);
+        setIsEditMode(false);
+        setEditSuccess("Changes saved successfully!");
+        
+        // Refresh the users list in the background after modal stays open briefly
+        setTimeout(() => {
+          setEditSuccess("");
+          loadUsers();
+        }, 1500);
+      } else {
+        setEditError("Failed to save changes");
+      }
+    } catch (err) {
+      setEditError(err.response?.data?.msg || "Failed to save changes");
+    }
+  };
+
   const handleDeleteUser = async (userId) => {
     if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
 
@@ -73,15 +114,6 @@ export default function UserManagement() {
       loadUsers();
     } catch (err) {
       alert("Failed to delete user");
-    }
-  };
-
-  const handleToggleStatus = async (userId, isActive) => {
-    try {
-      await toggleUserStatus(userId, !isActive);
-      loadUsers();
-    } catch (err) {
-      alert("Failed to update user status");
     }
   };
 
@@ -145,23 +177,6 @@ export default function UserManagement() {
               <option value="admin">Admin</option>
             </select>
           </div>
-
-          {/* Status Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
-            <select
-              value={filters.status}
-              onChange={e => {
-                setFilters(prev => ({ ...prev, status: e.target.value }));
-                setPage(1);
-              }}
-              className="h-10 w-full px-4 border-2 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-400 bg-white text-gray-900 font-medium cursor-pointer"
-            >
-              <option value="all">All Users</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -186,7 +201,6 @@ export default function UserManagement() {
                   <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Name</th>
                   <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Email</th>
                   <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Role</th>
-                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Status</th>
                   <th className="px-6 py-4 text-right text-sm font-bold text-gray-900">Actions</th>
                 </tr>
               </thead>
@@ -207,35 +221,13 @@ export default function UserManagement() {
                         {user.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getStatusBadge(user.isActive)}`}>
-                        {user.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex gap-2 justify-end">
                         <button
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setNewRole(user.role);
-                            setReason("");
-                            setModalError("");
-                            setModalSuccess("");
-                            setShowRoleModal(true);
-                          }}
+                          onClick={() => handleViewDetails(user)}
                           className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors"
                         >
-                          Change Role
-                        </button>
-                        <button
-                          onClick={() => handleToggleStatus(user._id, user.isActive)}
-                          className={`px-3 py-1 text-white text-xs font-bold rounded-lg transition-colors ${
-                            user.isActive
-                              ? "bg-yellow-600 hover:bg-yellow-700"
-                              : "bg-green-600 hover:bg-green-700"
-                          }`}
-                        >
-                          {user.isActive ? "Deactivate" : "Activate"}
+                          View Details
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user._id)}
@@ -276,75 +268,189 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* Role Change Modal */}
-      {showRoleModal && selectedUser && (
+      {/* User Details Modal */}
+      {showDetailsModal && selectedUser && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 border border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Change User Role</h3>
-            
-            {modalError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-medium">
-                {modalError}
-              </div>
-            )}
-
-            {modalSuccess && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm font-medium">
-                {modalSuccess}
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">User: <span className="font-bold text-gray-900">{selectedUser.name}</span></p>
-                <p className="text-sm font-medium text-gray-700">Current Role: <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getRoleBadge(selectedUser.role)}`}>{selectedUser.role}</span></p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">New Role</label>
-                <select
-                  value={newRole}
-                  onChange={e => setNewRole(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-400 bg-white text-gray-900 font-medium cursor-pointer"
-                >
-                  <option value="">Select a role</option>
-                  <option value="student">Student</option>
-                  <option value="instructor">Instructor</option>
-                  <option value="faculty_advisor">Faculty Advisor</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Reason (optional)</label>
-                <textarea
-                  value={reason}
-                  onChange={e => setReason(e.target.value)}
-                  placeholder="Why are you changing this role?"
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-400 text-gray-900 font-medium"
-                  rows="3"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={handleRoleChange}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                >
-                  Update Role
-                </button>
-                <button
-                  onClick={() => {
-                    setShowRoleModal(false);
-                    setModalError("");
-                    setModalSuccess("");
-                  }}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 border border-gray-200">
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">User Details</h3>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
             </div>
+
+            {editError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-medium">
+                {editError}
+              </div>
+            )}
+
+            {editSuccess && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm font-medium">
+                {editSuccess}
+              </div>
+            )}
+
+            {loadingDetails ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    {isEditMode ? (
+                      <input
+                        type="text"
+                        value={editFormData.name || ""}
+                        onChange={e => setEditFormData({...editFormData, name: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500"
+                      />
+                    ) : (
+                      <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900 font-medium">{selectedUser.name || "N/A"}</p>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900 font-medium">{selectedUser.email}</p>
+                  </div>
+
+                  {/* Role */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                    <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900 font-medium capitalize">{selectedUser.role}</p>
+                  </div>
+
+                  {/* Entry No (Student) */}
+                  {selectedUser.role === "student" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Entry No.</label>
+                      {isEditMode ? (
+                        <input
+                          type="text"
+                          value={editFormData.entry_no || ""}
+                          onChange={e => setEditFormData({...editFormData, entry_no: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900 font-medium">{selectedUser.entry_no || "N/A"}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Department (Student/Advisor) */}
+                  {(selectedUser.role === "student" || selectedUser.role === "faculty_advisor") && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{selectedUser.role === "student" ? "Department" : "Advisor Department"}</label>
+                      {isEditMode ? (
+                        <input
+                          type="text"
+                          value={selectedUser.role === "student" ? (editFormData.department || "") : (editFormData.advisor_department || "")}
+                          onChange={e => {
+                            if (selectedUser.role === "student") {
+                              setEditFormData({...editFormData, department: e.target.value});
+                            } else {
+                              setEditFormData({...editFormData, advisor_department: e.target.value});
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900 font-medium">
+                          {selectedUser.role === "student" ? (selectedUser.department || "N/A") : (selectedUser.advisor_department || "N/A")}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Year */}
+                  {(selectedUser.role === "student" || selectedUser.role === "faculty_advisor") && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{selectedUser.role === "student" ? "Year" : "Advisor Year"}</label>
+                      {isEditMode ? (
+                        <input
+                          type="number"
+                          value={selectedUser.role === "student" ? (editFormData.year || "") : (editFormData.advisor_year || "")}
+                          onChange={e => {
+                            if (selectedUser.role === "student") {
+                              setEditFormData({...editFormData, year: parseInt(e.target.value)});
+                            } else {
+                              setEditFormData({...editFormData, advisor_year: parseInt(e.target.value)});
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900 font-medium">
+                          {selectedUser.role === "student" ? (selectedUser.year || "N/A") : (selectedUser.advisor_year || "N/A")}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Semester (Student) */}
+                  {selectedUser.role === "student" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+                      {isEditMode ? (
+                        <input
+                          type="number"
+                          value={editFormData.semester || ""}
+                          onChange={e => setEditFormData({...editFormData, semester: parseInt(e.target.value)})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900 font-medium">{selectedUser.semester || "N/A"}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  {!isEditMode ? (
+                    <>
+                      <button
+                        onClick={() => setIsEditMode(true)}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setShowDetailsModal(false)}
+                        className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors"
+                      >
+                        Close
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleSaveEdit}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditMode(false);
+                          setEditFormData(selectedUser);
+                        }}
+                        className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

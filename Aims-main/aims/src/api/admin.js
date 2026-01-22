@@ -1,12 +1,12 @@
-import axios from "axios";
+import api from "./axios";
 
-const API_BASE = "http://localhost:5000/admin";
+const API_BASE = "/admin";
 
 // Dashboard
 export const fetchDashboardStats = async () => {
   try {
-    const res = await axios.get(`${API_BASE}/dashboard/stats`, { withCredentials: true });
-    return res.data;
+    const res = await api.get(`${API_BASE}/dashboard/stats`);
+    return res.data.data;
   } catch (err) {
     console.error("Error fetching stats:", err);
     throw err;
@@ -21,8 +21,8 @@ export const fetchAllUsers = async (filters = {}, page = 1, limit = 10) => {
       limit,
       ...filters
     });
-    const res = await axios.get(`${API_BASE}/users?${params}`, { withCredentials: true });
-    return res.data;
+    const res = await api.get(`${API_BASE}/users?${params}`);
+    return res.data.data;
   } catch (err) {
     console.error("Error fetching users:", err);
     throw err;
@@ -31,8 +31,8 @@ export const fetchAllUsers = async (filters = {}, page = 1, limit = 10) => {
 
 export const fetchUserDetails = async (userId) => {
   try {
-    const res = await axios.get(`${API_BASE}/users/${userId}`, { withCredentials: true });
-    return res.data;
+    const res = await api.get(`${API_BASE}/users/${userId}`);
+    return res.data.data;
   } catch (err) {
     console.error("Error fetching user:", err);
     throw err;
@@ -42,12 +42,11 @@ export const fetchUserDetails = async (userId) => {
 // Create new user (Student/Instructor/Faculty Advisor)
 export const createNewUser = async (formData) => {
   try {
-    const res = await axios.post(
+    const res = await api.post(
       `${API_BASE}/users`,
-      formData,
-      { withCredentials: true }
+      formData
     );
-    return res.data;
+    return res.data.data;
   } catch (err) {
     console.error("Error creating user:", err);
     throw err;
@@ -57,42 +56,40 @@ export const createNewUser = async (formData) => {
 // Role Management
 export const changeUserRole = async (userId, newRole, reason) => {
   try {
-    const res = await axios.put(
+    const res = await api.put(
       `${API_BASE}/users/${userId}/role`,
-      { newRole, reason },
-      { withCredentials: true }
+      { newRole, reason }
     );
-    return res.data;
+    return res.data.data;
   } catch (err) {
     console.error("Error changing role:", err);
     throw err;
   }
 };
 
-export const toggleUserStatus = async (userId, isActive) => {
+// Update user details (name, entry_no, department, year, semester, advisor_department, advisor_year)
+export const updateUser = async (userId, userData) => {
   try {
-    const res = await axios.put(
-      `${API_BASE}/users/${userId}/status`,
-      { isActive },
-      { withCredentials: true }
+    const res = await api.put(
+      `${API_BASE}/users/${userId}`,
+      userData
     );
-    return res.data;
+    return res.data.data;
   } catch (err) {
-    console.error("Error toggling status:", err);
+    console.error("Error updating user:", err);
     throw err;
   }
 };
 
 export const deleteUser = async (userId, reason) => {
   try {
-    const res = await axios.delete(
+    const res = await api.delete(
       `${API_BASE}/users/${userId}`,
       {
-        data: { reason },
-        withCredentials: true
+        data: { reason }
       }
     );
-    return res.data;
+    return res.data.data;
   } catch (err) {
     console.error("Error deleting user:", err);
     throw err;
@@ -102,12 +99,11 @@ export const deleteUser = async (userId, reason) => {
 // Bulk Operations
 export const bulkRoleConversion = async (userIds, newRole, reason) => {
   try {
-    const res = await axios.post(
+    const res = await api.post(
       `${API_BASE}/users/bulk/role-conversion`,
-      { userIds, newRole, reason },
-      { withCredentials: true }
+      { userIds, newRole, reason }
     );
-    return res.data;
+    return res.data.data;
   } catch (err) {
     console.error("Error in bulk conversion:", err);
     throw err;

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useOutletContext } from "react-router-dom";
+import UserDetailsCard from "@/components/UserDetailsCard";
 
 export default function StudentCourseStatus() {
   const {
@@ -14,7 +15,9 @@ export default function StudentCourseStatus() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <UserDetailsCard />
+
       <h2 className="text-xl font-semibold">Offered Courses</h2>
 
       {availableCourses.length === 0 && (

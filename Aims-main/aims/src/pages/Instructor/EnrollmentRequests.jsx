@@ -8,6 +8,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import UserDetailsCard from "@/components/UserDetailsCard";
 import {
   fetchInstructorEnrollRequests,
   approveEnroll,
@@ -56,7 +57,9 @@ export default function EnrollmentRequests() {
   const courseKeys = Object.keys(grouped);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <UserDetailsCard />
+
       <h2 className="text-xl font-semibold">Pending Enrollment Requests</h2>
 
       {loading && <div>Loading...</div>}

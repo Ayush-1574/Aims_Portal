@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchCourses, requestEnrollment } from "@/api/course";
+import UserDetailsCard from "@/components/UserDetailsCard";
 
 export default function CoursesPage() {
   const [filters, setFilters] = useState({
@@ -55,6 +56,8 @@ export default function CoursesPage() {
 
   return (
     <div className="space-y-8">
+      <UserDetailsCard />
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 text-gray-900">Available Courses</h1>

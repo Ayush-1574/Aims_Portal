@@ -10,6 +10,14 @@ const resolveRoleHint = (email) => {
   return "student";
 };
 
+// Helper to extract base email (before + modifier)
+const getBaseEmail = (email) => {
+  const parts = email.split("@");
+  if (parts.length !== 2) return email;
+  const localPart = parts[0].split("+")[0];
+  return `${localPart}@${parts[1]}`;
+};
+
 // 1. SEND OTP
 export const sendOtp = async (req, res) => {
   try {
@@ -23,18 +31,24 @@ export const sendOtp = async (req, res) => {
       return res.status(400).json({ success: false, msg: "Only IIT Ropar emails allowed" });
     }
 
+    // Extract base email (remove +X modifier if present)
+    const baseEmail = getBaseEmail(email);
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await Otp.deleteMany({ email });
+    // Delete old OTPs for this base email
+    await Otp.deleteMany({ email: baseEmail });
 
+    // Store OTP with base email
     await Otp.create({
-      email,
+      email: baseEmail,
       otp,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes expiry
     });
 
+    // Send email to base email
     await sendEmail({
-      to: email,
+      to: baseEmail,
       subject: "Your AIMS Portal OTP Code",
       html: `
         <div style="font-family:Arial;font-size:16px;">
@@ -60,43 +74,49 @@ export const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    // const record = await Otp.findOne({ email, otp });
+    // Extract base email for OTP verification (remove +X modifier if present)
+    const baseEmail = getBaseEmail(email);
+
+    // const record = await Otp.findOne({ email: baseEmail, otp });
 
     // if (!record || record.expiresAt < new Date()) {
     //   return res.status(400).json({ success: false, msg: "Invalid or expired OTP" });
     // }
 
-    const user = await User.findOne({ email });
-    console.log(user);
+    // Look up user by FULL email (with +X modifier if provided)
+    // This allows different +X variants to be different users
+    let user = await User.findOne({ email: email });
 
+    console.log("User lookup result:", user);
+    if (user) {
+      console.log("User found - Email:", user.email, "Role:", user.role, "ID:", user._id);
+    }
 
     if (user) {
       // existing user → login
+      if (!user.role) {
+        console.error("ERROR: User found but role is missing/null");
+        return res.status(400).json({ success: false, msg: "User role not found. Please contact admin." });
+      }
+      
       const token = jwt.sign(
-        { email, role: user.role, userId: user._id },
+        { email: email, role: user.role, userId: user._id },
         process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
 
-     res.cookie("token", token, {
-  httpOnly: true,
-  secure: false,
-  sameSite: "lax",
-  domain: "localhost",
-  path: "/",
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
-
+      console.log("[Auth Controller] OTP verified - returning token for sessionStorage");
 
       return res.json({
         success: true,
         user_exists: true,
         role: user.role,
+        token,  // Return token for sessionStorage (per-tab isolation)
       });
     }
 
     // new user → signup needed
-    const role_hint = resolveRoleHint(email);
+    const role_hint = resolveRoleHint(baseEmail);
 
     return res.json({
       success: true,
@@ -114,25 +134,21 @@ export const signup = async (req, res) => {
   try {
     const { email, role, data } = req.body;
 
-    const user = await User.create({ email, role, data });
+    // Store FULL email (with +X modifier if provided)
+    // This allows different +X variants to be different users
+    const user = await User.create({ email: email, role, data });
 
     const token = jwt.sign(
-      { email, role, userId: user._id },
+      { email: email, role, userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", token, {
-  httpOnly: true,
-  secure: false,
-  sameSite: "lax",
-  domain: "localhost",
-  path: "/",
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
+    console.log("[Auth Controller] User signup - creating token");
 
+    console.log("[Auth Controller] Returning token for sessionStorage");
 
-    return res.json({ success: true, role });
+    return res.json({ success: true, role, token });
 
   } catch (err) {
     return res.status(500).json({ success: false, msg: err.message });
@@ -142,26 +158,52 @@ export const signup = async (req, res) => {
 // 4. GET PROFILE
 export const getMe = async (req, res) => {
   try {
+    console.log("[GetMe] Fetching profile for userId:", req.user.userId);
     const user = await User.findById(req.user.userId);
 
-    if (!user) return res.status(401).json({ success: false });
+    if (!user) {
+      console.log("[GetMe] ❌ User not found in database");
+      return res.status(401).json({ success: false, msg: "User not found" });
+    }
+
+    console.log("[GetMe] ✓ User found:", user.email, "Role:", user.role);
+
+    // Create a fresh token for sessionStorage (per-tab)
+    const token = jwt.sign(
+      { email: user.email, role: user.role, userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
     // sanitize response
     return res.json({
       success : true,
+      token,  // Send token for sessionStorage storage
       user : {
-      email: user.email,
-      role: user.role,
-      data: user.data,}
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        entry_no: user.entry_no,
+        department: user.department,
+        year: user.year,
+        semester: user.semester,
+        advisor_department: user.advisor_department,
+        advisor_year: user.advisor_year,
+        data: user.data,
+      }
     });
 
   } catch (err) {
+    console.error("[GetMe] Error:", err);
     return res.status(500).json({ success: false, msg: err.message });
   }
 };
 
-// 5. LOGOUT (optional)
+// 5. LOGOUT
 export const logout = async (req, res) => {
-  res.clearCookie("token");
-  return res.json({ success: true });
+  // Logout is handled client-side by clearing sessionStorage
+  // We can optionally clear cookies if they exist, but they won't be used anyway
+  res.clearCookie("token", { path: "/" });
+  return res.json({ success: true, msg: "Logged out successfully" });
 };

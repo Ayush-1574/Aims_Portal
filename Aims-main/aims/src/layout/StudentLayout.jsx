@@ -1,13 +1,12 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
 
 export default function StudentLayout() {
   const { logout } = useAuth();
 
   const menu = [
-    { label: "📚 Offered Courses", path: "/student/dashboard/courses" },
-    { label: "📋 Academic Record", path: "/student/dashboard/record" },
+    { label: "Offered Courses", path: "/student/dashboard/courses" },
+    { label: "Academic Record", path: "/student/dashboard/record" },
   ];
 
   return (
@@ -17,25 +16,24 @@ export default function StudentLayout() {
       <aside className="w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-gray-100 flex flex-col shadow-2xl border-r border-slate-700">
         
         {/* Header */}
-        <div className="p-6 border-b border-slate-700 backdrop-blur-sm">
-          <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+        <div className="p-6 border-b border-slate-700">
+          <div className="text-2xl font-bold text-white">
             Student Portal
           </div>
           <p className="text-xs text-gray-400 mt-1">Academic Management</p>
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col p-4 gap-2 flex-1">
+        <nav className="flex flex-col p-4 gap-3 flex-1">
           {menu.map(m => (
             <NavLink
               key={m.path}
               to={m.path}
               className={({ isActive }) =>
-                `px-4 py-3 text-sm rounded-lg font-medium transition-all duration-200 flex items-center gap-2
-                ${
+                `px-4 py-3 text-sm rounded-lg font-bold transition-all duration-200 flex items-center gap-2 ${
                   isActive
-                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20"
-                    : "text-gray-300 hover:bg-slate-700/50 hover:text-white"
+                    ? "bg-white text-slate-900 shadow-lg"
+                    : "text-gray-300 hover:bg-slate-700/80 hover:text-white"
                 }`
               }
             >
@@ -45,17 +43,13 @@ export default function StudentLayout() {
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-slate-700 backdrop-blur-sm">
-          <Button
+        <div className="p-4 border-t border-slate-700">
+          <button
             onClick={logout}
-            className="w-full px-4 py-2.5 text-sm rounded-lg
-                       bg-gradient-to-r from-red-600 to-red-500
-                       hover:from-red-700 hover:to-red-600
-                       text-white font-medium transition-all duration-200
-                       shadow-lg shadow-red-500/20 hover:shadow-lg hover:shadow-red-500/30"
+            className="w-full px-4 py-2 text-sm rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition-all duration-200 shadow-lg"
           >
-            🚪 Logout
-          </Button>
+            Logout
+          </button>
         </div>
       </aside>
 

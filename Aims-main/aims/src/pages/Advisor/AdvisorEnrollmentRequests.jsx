@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import UserDetailsCard from "@/components/UserDetailsCard";
 import {
   fetchAdvisorEnrollRequests,
   advisorApprove,
@@ -55,6 +56,8 @@ export default function AdvisorEnrollmentRequests() {
 
   return (
     <div className="space-y-6">
+      <UserDetailsCard />
+
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Enrollment Requests</h1>
         <p className="text-gray-600 mt-1">Review and approve student enrollment requests</p>

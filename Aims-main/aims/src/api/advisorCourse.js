@@ -1,7 +1,7 @@
 import api from "./axios";
 
 export const fetchPendingCourses = () =>
-  api.get("/courses", { params: { status: "PENDING_APPROVAL" } })
+  api.get("/courses/pending")
      .then(res => res.data);
 
 export const fetchCourses = () =>

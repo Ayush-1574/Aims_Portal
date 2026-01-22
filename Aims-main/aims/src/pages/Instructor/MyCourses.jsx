@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
+import UserDetailsCard from "@/components/UserDetailsCard";
 
 import {
   fetchMyCourses,
@@ -30,9 +31,14 @@ export default function MyCourses() {
     setLoading(true);
     try {
       const courseRes = await fetchMyCourses();
+      console.log("Courses response:", courseRes);
+      
       const pendRes = await fetchInstructorPendingEnrollments();
+      console.log("Pending enrollments response:", pendRes);
 
       const courseList = courseRes.courses || [];
+      console.log("Course list:", courseList);
+      
       setCourses(courseList);
 
       // compute pending
@@ -55,6 +61,7 @@ export default function MyCourses() {
 
     } catch (err) {
       console.error("Failed loading instructor courses", err);
+      console.error("Error details:", err.response?.data || err.message);
     } finally {
       setLoading(false);
     }
@@ -97,6 +104,8 @@ export default function MyCourses() {
 
   return (
     <div className="space-y-6">
+      <UserDetailsCard />
+
       <div>
         <h1 className="text-4xl font-bold mb-2 text-gray-900">📚 My Courses</h1>
         <p className="text-gray-600">Manage your offered courses and enrollments</p>

@@ -64,7 +64,9 @@ const app = express();
 
 app.use(cors({
     origin: "http://localhost:5173",
-    credentials: true,
+    credentials: false,  // Don't need credentials since using Authorization header
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 app.use((req, res, next) => {

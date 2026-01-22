@@ -7,6 +7,7 @@ const courseSchema = new mongoose.Schema(
     title: { type: String, required: true },
 
     dept: { type: String, required: true }, // e.g. CSE, EE
+    year: { type: Number, required: true }, // 1, 2, 3, 4 - which year this course is for
     ltp: { type: String, required: true }, // e.g. "3-0-2"
     session: { type: String, required: true }, // e.g. "2024-25"
 

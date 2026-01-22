@@ -1,24 +1,27 @@
 import Course from "../../models/course/course.js";
+import User from "../../models/Auth/User.js";
 
 /**
  * Instructor offers a course
  */
 export const offerCourse = async (req, res) => {
   try {
-    const { courseCode , title, dept, ltp, session } = req.body;
-    console.log(courseCode)
+    const { courseCode , title, dept, year, ltp, session } = req.body;
+    console.log("Offering course:", courseCode, "for dept:", dept, "year:", year);
     
     const course = await Course.create({
       courseCode,
       title,
       dept,
+      year,
       ltp,
       session,
       instructor: req.user.userId, 
       status: "PENDING_APPROVAL"
     });
-    return res.json({ success: true, course});
     
+    console.log("Course created:", course._id);
+    return res.json({ success: true, course});
     
   } catch (err) {
     return res.status(500).json({ success: false, msg: err.message });
@@ -112,11 +115,31 @@ export const getInstructorCourses = async (req, res) => {
 
 export const getPendingCourses = async (req, res) => {
   try {
-    const courses = await Course.find({ status: "PENDING_APPROVAL" })
+    // Fetch the full user object to get advisor_department and advisor_year
+    const advisor = await User.findById(req.user.userId);
+
+    if (!advisor) {
+      return res.status(404).json({ success: false, msg: "Advisor not found" });
+    }
+
+    const advisorDept = advisor.advisor_department;
+    const advisorYear = advisor.advisor_year;
+
+    console.log("Advisor:", advisor.email);
+    console.log("Advisor filtering - Dept:", advisorDept, "Year:", advisorYear);
+
+    // Only show pending courses for this advisor's department and year
+    const courses = await Course.find({
+      status: "PENDING_APPROVAL",
+      dept: advisorDept,
+      year: advisorYear
+    })
       .populate("instructor", "email");
 
+    console.log("Found", courses.length, "pending courses for this advisor");
     return res.json({ success: true, courses });
   } catch (err) {
+    console.error("Error in getPendingCourses:", err);
     return res.status(500).json({ success: false, msg: err.message });
   }
 };

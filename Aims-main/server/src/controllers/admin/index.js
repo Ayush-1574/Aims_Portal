@@ -150,6 +150,40 @@ export const changeUserRole = async (req, res) => {
   }
 };
 
+// Update user details (name, entry_no, department, year, semester, advisor_department, advisor_year)
+export const updateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, entry_no, department, year, semester, advisor_department, advisor_year } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, msg: "User not found" });
+    }
+
+    // Update allowed fields
+    if (name) user.name = name;
+    if (entry_no !== undefined) user.entry_no = entry_no;
+    if (department !== undefined) user.department = department;
+    if (year !== undefined) user.year = year;
+    if (semester !== undefined) user.semester = semester;
+    if (advisor_department !== undefined) user.advisor_department = advisor_department;
+    if (advisor_year !== undefined) user.advisor_year = advisor_year;
+
+    user.updatedAt = new Date();
+    await user.save();
+
+    res.json({
+      success: true,
+      msg: "User updated successfully",
+      data: user
+    });
+  } catch (err) {
+    console.error("Error updating user:", err);
+    res.status(500).json({ success: false, msg: "Failed to update user" });
+  }
+};
+
 // Delete user
 export const deleteUser = async (req, res) => {
   try {
@@ -175,31 +209,6 @@ export const deleteUser = async (req, res) => {
   } catch (err) {
     console.error("Error deleting user:", err);
     res.status(500).json({ success: false, msg: "Failed to delete user" });
-  }
-};
-
-// Deactivate/Reactivate user
-export const toggleUserStatus = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { isActive } = req.body;
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, msg: "User not found" });
-    }
-
-    user.isActive = isActive;
-    await user.save();
-
-    res.json({
-      success: true,
-      msg: `User ${isActive ? "activated" : "deactivated"} successfully`,
-      data: user
-    });
-  } catch (err) {
-    console.error("Error toggling user status:", err);
-    res.status(500).json({ success: false, msg: "Failed to update user status" });
   }
 };
 

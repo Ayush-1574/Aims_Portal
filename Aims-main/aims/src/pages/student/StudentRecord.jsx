@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { getStudentRecord } from "@/api/enrollment";
+import UserDetailsCard from "@/components/UserDetailsCard";
 
 export default function StudentRecord() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showEnrolledOnly, setShowEnrolledOnly] = useState(false);
-  const [selectedSemester, setSelectedSemester] = useState("all");
+  const [selectedSession, setSelectedSession] = useState("all");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,27 +32,26 @@ export default function StudentRecord() {
     </div>
   );
 
-  // normalize → backend already provides semester
-  const normalized = courses.map(c => ({
-    ...c,
-    semester: c.semester ?? 1
-  }));
+  // Get unique sessions
+  const uniqueSessions = [...new Set(courses.map(c => c.session))].sort().reverse();
 
-  const filtered = normalized.filter(c => {
+  const filtered = courses.filter(c => {
     if (showEnrolledOnly && !c.enrolled) return false;
-    if (selectedSemester !== "all" && c.semester !== Number(selectedSemester))
-      return false;
+    if (selectedSession !== "all" && c.session !== selectedSession) return false;
     return true;
   });
 
-  const semesterGroups = filtered.reduce((acc, c) => {
-    if (!acc[c.semester]) acc[c.semester] = [];
-    acc[c.semester].push(c);
+  const sessionGroups = filtered.reduce((acc, c) => {
+    const session = c.session || "Unknown";
+    if (!acc[session]) acc[session] = [];
+    acc[session].push(c);
     return acc;
   }, {});
 
   return (
     <div className="space-y-6">
+      <UserDetailsCard />
+
       <div>
         <h1 className="text-4xl font-bold mb-2 text-gray-900">📚 Academic Record</h1>
         <p className="text-gray-600">View your course history and grades</p>
@@ -80,17 +80,16 @@ export default function StudentRecord() {
           </label>
 
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-700">Semester:</label>
+            <label className="text-sm font-medium text-gray-700">Session:</label>
             <select
               className="border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-              value={selectedSemester}
-              onChange={e => setSelectedSemester(e.target.value)}
+              value={selectedSession}
+              onChange={e => setSelectedSession(e.target.value)}
             >
-              <option value="all">All Semesters</option>
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-              <option value="3">Semester 3</option>
-              <option value="4">Semester 4</option>
+              <option value="all">All Sessions</option>
+              {uniqueSessions.map(session => (
+                <option key={session} value={session}>{session}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -98,17 +97,17 @@ export default function StudentRecord() {
 
       {/* Records */}
       <div className="space-y-6">
-        {Object.keys(semesterGroups).length === 0 ? (
+        {Object.keys(sessionGroups).length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
             <p className="text-gray-600 text-lg font-medium">No courses to display</p>
             <p className="text-gray-500 text-sm">Try adjusting your filters</p>
           </div>
         ) : (
-          Object.keys(semesterGroups).sort((a, b) => a - b).map(sem => (
-            <div key={sem} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-              {/* Semester Header */}
+          Object.keys(sessionGroups).sort().reverse().map(session => (
+            <div key={session} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+              {/* Session Header */}
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4">
-                <h3 className="text-lg font-bold">Semester {sem}</h3>
+                <h3 className="text-lg font-bold">📅 Session: {session}</h3>
               </div>
 
               {/* Course Table */}
@@ -126,7 +125,7 @@ export default function StudentRecord() {
                     </tr>
                   </thead>
                   <tbody>
-                    {semesterGroups[sem].map((c, i) => (
+                    {sessionGroups[session].map((c, i) => (
                       <tr
                         key={c.id}
                         className={`border-b transition-colors hover:bg-blue-50 ${
@@ -148,9 +147,11 @@ export default function StudentRecord() {
                         </td>
                         <td className="px-6 py-4 text-sm text-center">
                           <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                            c.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                            c.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'
+                            c.status === 'ENROLLED' ? 'bg-green-100 text-green-800' :
+                            c.status === 'PENDING_INSTRUCTOR' ? 'bg-yellow-100 text-yellow-800' :
+                            c.status === 'PENDING_ADVISOR' ? 'bg-blue-100 text-blue-800' :
+                            c.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
                           }`}>
                             {c.status}
                           </span>
@@ -158,7 +159,7 @@ export default function StudentRecord() {
                         <td className="px-6 py-4 text-sm text-center text-gray-700">{c.category || '-'}</td>
                         <td className="px-6 py-4 text-sm text-center">
                           <span className={`font-bold text-lg ${
-                            c.grade ? 'text-blue-600' : 'text-gray-400'
+                            c.grade && c.grade !== '-' ? 'text-blue-600' : 'text-gray-400'
                           }`}>
                             {c.grade || '-'}
                           </span>

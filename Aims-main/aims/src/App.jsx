@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useAuth } from "@/context/AuthContext";
 
 // pages
 import AuthPage from "@/pages/auth/AuthPage";
@@ -30,12 +31,48 @@ import CreateUser from "./pages/Admin/CreateUser";
 import { ROUTES } from "@/config/constants";
 import StudentLayout from "./layout/StudentLayout";
 
+// Smart home route that redirects authenticated users to their dashboard
+function HomeRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If authenticated, redirect to appropriate dashboard
+  if (user) {
+    switch (user.role) {
+      case "student":
+        return <Navigate to={ROUTES.STUDENT_DASHBOARD} replace />;
+      case "instructor":
+        return <Navigate to="/instructor/dashboard" replace />;
+      case "faculty_advisor":
+        return <Navigate to="/advisor/dashboard" replace />;
+      case "admin":
+        return <Navigate to="/admin/dashboard" replace />;
+      default:
+        return <AuthPage />;
+    }
+  }
+
+  // Not authenticated, show login
+  return <AuthPage />;
+}
+
 export default function App() {
   return (
     <Routes>
 
-      {/* PUBLIC */}
-      <Route path={ROUTES.HOME} element={<AuthPage />} />
+      {/* HOME - Smart redirect based on auth state */}
+      <Route path={ROUTES.HOME} element={<HomeRoute />} />
+      <Route path="/login" element={<AuthPage />} />
 
       {/* STUDENT */}
       <Route

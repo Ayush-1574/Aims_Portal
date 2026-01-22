@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import UserDetailsCard from "@/components/UserDetailsCard";
 import {
   Select,
   SelectContent,
@@ -69,7 +70,9 @@ export default function EnrolledStudents() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <UserDetailsCard />
+
       <h2 className="text-xl font-semibold">Enrolled Students</h2>
 
       <Table className="bg-white rounded-lg border">

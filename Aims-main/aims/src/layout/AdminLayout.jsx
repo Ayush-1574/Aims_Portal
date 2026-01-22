@@ -1,6 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
 
 export default function AdminLayout() {
   const { logout } = useAuth();
@@ -18,7 +17,7 @@ export default function AdminLayout() {
       <aside className="w-64 h-full bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex flex-col shadow-2xl border-r border-slate-700">
         
         {/* Header */}
-        <div className="px-6 py-6 border-b border-slate-700 backdrop-blur-sm">
+        <div className="px-6 py-6 border-b border-slate-700">
           <div className="text-2xl font-bold text-white">
             Admin Panel
           </div>
@@ -45,13 +44,13 @@ export default function AdminLayout() {
         </nav>
 
         {/* Logout */}
-        <div className="px-4 py-4 border-t border-slate-700 backdrop-blur-sm">
-          <Button
+        <div className="px-4 py-4 border-t border-slate-700">
+          <button
             onClick={logout}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold transition-all duration-200 shadow-lg"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-200 shadow-lg"
           >
             Logout
-          </Button>
+          </button>
         </div>
       </aside>
 
