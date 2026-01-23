@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createNewUser } from "../api";
+import client from "@/core/api/client"; // Use your configured axios client
 import { UserPlus, CheckCircle, AlertCircle, GraduationCap, BookOpen, School, Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,15 @@ import { Label } from "@/components/ui/label";
 
 export default function CreateUser({ onUserCreated, onCancel }) {
   const [formData, setFormData] = useState({
-    name: "", email: "", role: "student", entry_no: "",
-    department: "", year: "", semester: "", advisor_department: "", advisor_year: ""
+    name: "", 
+    email: "", 
+    role: "student", 
+    entry_no: "",
+    department: "", 
+    year: "", 
+    semester: "", 
+    advisor_department: "", 
+    advisor_year: "" // Added this field to state
   });
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", msg: "" });
@@ -24,8 +31,11 @@ export default function CreateUser({ onUserCreated, onCancel }) {
     setStatus({ type: "", msg: "" });
 
     try {
-      const result = await createNewUser(formData);
-      if (result.success) {
+      // Use client.post directly instead of a separate api function if preferred, 
+      // or ensure createNewUser matches this payload.
+      const res = await client.post("/admin/create-user", formData);
+      
+      if (res.data.success) {
         setStatus({ type: "success", msg: `User "${formData.name}" created successfully!` });
         // Reset form
         setFormData({ 
@@ -155,7 +165,7 @@ export default function CreateUser({ onUserCreated, onCancel }) {
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                       <Label>Department</Label>
+                       <Label>Department to Advise</Label>
                        <select 
                           className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition-all"
                           name="advisor_department" 
@@ -169,12 +179,24 @@ export default function CreateUser({ onUserCreated, onCancel }) {
                           <option value="ME">ME</option>
                        </select>
                     </div>
+                    {/* NEW FIELD: Advisor Year */}
+                    <div className="space-y-2">
+                       <Label>Year to Advise</Label>
+                       <Input 
+                         type="number" 
+                         name="advisor_year" 
+                         value={formData.advisor_year} 
+                         onChange={handleChange} 
+                         placeholder="e.g. 1" 
+                         required 
+                       />
+                    </div>
                  </div>
               </div>
             )}
 
             <div className="flex gap-4 pt-4">
-              <Button type="submit" size="lg" className="flex-1" isLoading={loading}>
+              <Button type="submit" size="lg" className="flex-1 bg-slate-900 hover:bg-slate-800 text-white" isLoading={loading}>
                 Create Account
               </Button>
               {onCancel && (
