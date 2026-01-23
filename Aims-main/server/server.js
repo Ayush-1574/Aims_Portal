@@ -50,10 +50,10 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./src/config/db.js";
-import authRoutes from "./src/routes/auth/index.js";
-import courseRoutes from "./src/routes/course/index.js";
+import authRoutes from "./src/routes/authRoute.js";
+import courseRoutes from "./src/routes/courseRoute.js";
 import enrollmentRoutes from "./src/routes/enrollmentRoute.js";
-import adminRoutes from "./src/routes/admin/index.js";
+import adminRoutes from "./src/routes/adminRoute.js";
 import cookieParser from "cookie-parser";
 console.log("BACKEND FILE RUNNING");
 

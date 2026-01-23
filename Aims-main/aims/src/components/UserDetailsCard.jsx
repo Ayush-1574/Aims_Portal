@@ -1,154 +1,68 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/core/context/AuthContext";
+import { User, Mail, Hash, BookOpen, Calendar, Layers } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+
+// --- FIX: Define this OUTSIDE the main component ---
+const DetailRow = ({ icon: Icon, label, value }) => (
+  <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
+    <div className="p-2 bg-slate-100 rounded-md text-slate-500">
+      <Icon size={16} />
+    </div>
+    <div>
+      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">{label}</p>
+      <p className="text-sm font-semibold text-slate-800">{value || "N/A"}</p>
+    </div>
+  </div>
+);
 
 export default function UserDetailsCard() {
   const { user, loading } = useAuth();
 
   if (loading || !user) return null;
 
-  const getDetailsByRole = () => {
-    switch (user.role) {
-      case "student":
-        return [
-          { label: "Entry No.", value: user.entry_no || "N/A", icon: "🆔" },
-          { label: "Department", value: user.department || "N/A", icon: "🏛️" },
-          { label: "Year", value: user.year || "N/A", icon: "📅" },
-          { label: "Semester", value: user.semester || "N/A", icon: "📚" }
-        ];
-      case "faculty_advisor":
-        return [
-          { label: "Department", value: user.advisor_department || "N/A", icon: "🏛️" },
-          { label: "Year", value: user.advisor_year || "N/A", icon: "📅" }
-        ];
-      case "instructor":
-        return [
-          { label: "Role", value: "Course Instructor", icon: "👨‍🏫" },
-          { label: "Status", value: "Active", icon: "✅" }
-        ];
-      case "admin":
-        return [
-          { label: "Role", value: "Administrator", icon: "⚙️" },
-          { label: "Status", value: "Active", icon: "✅" }
-        ];
-      default:
-        return [];
-    }
-  };
-
-  const getRoleColor = () => {
-    switch (user.role) {
-      case "student":
-        return {
-          gradient: "from-blue-500 to-blue-600",
-          light: "bg-blue-50",
-          text: "text-blue-900",
-          badge: "bg-blue-100 text-blue-700",
-          border: "border-blue-200"
-        };
-      case "faculty_advisor":
-        return {
-          gradient: "from-cyan-500 to-cyan-600",
-          light: "bg-cyan-50",
-          text: "text-cyan-900",
-          badge: "bg-cyan-100 text-cyan-700",
-          border: "border-cyan-200"
-        };
-      case "instructor":
-        return {
-          gradient: "from-purple-500 to-purple-600",
-          light: "bg-purple-50",
-          text: "text-purple-900",
-          badge: "bg-purple-100 text-purple-700",
-          border: "border-purple-200"
-        };
-      case "admin":
-        return {
-          gradient: "from-emerald-500 to-emerald-600",
-          light: "bg-emerald-50",
-          text: "text-emerald-900",
-          badge: "bg-emerald-100 text-emerald-700",
-          border: "border-emerald-200"
-        };
-      default:
-        return {
-          gradient: "from-gray-500 to-gray-600",
-          light: "bg-gray-50",
-          text: "text-gray-900",
-          badge: "bg-gray-100 text-gray-700",
-          border: "border-gray-200"
-        };
-    }
-  };
-
-  const getRoleLabel = () => {
-    const labels = {
-      student: "Student",
-      faculty_advisor: "Faculty Advisor",
-      instructor: "Instructor",
-      admin: "Administrator"
-    };
-    return labels[user.role] || "User";
-  };
-
-  const getRoleIcon = () => {
-    switch (user.role) {
-      case "student":
-        return "👨‍🎓";
-      case "faculty_advisor":
-        return "👨‍🏫";
-      case "instructor":
-        return "📚";
-      case "admin":
-        return "⚙️";
-      default:
-        return "👤";
-    }
-  };
-
-  const colors = getRoleColor();
-  const details = getDetailsByRole();
-
   return (
-    <div className={`bg-gradient-to-r ${colors.gradient} rounded-2xl p-8 text-white shadow-lg mb-6 overflow-hidden relative`}>
-      {/* Decorative background element */}
-      <div className="absolute top-0 right-0 opacity-10 text-8xl -mt-4 -mr-4">{getRoleIcon()}</div>
-
-      <div className="relative z-10">
-        {/* Header section with icon, name, and role badge */}
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div className="text-6xl filter drop-shadow-lg">{getRoleIcon()}</div>
-            <div>
-              <h2 className="text-3xl font-bold">{user.name}</h2>
-              <div className="flex items-center gap-2 mt-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${colors.badge} bg-white/20 text-white`}>
-                  {getRoleLabel()}
-                </span>
-              </div>
+    <Card className="border-l-4 border-l-blue-600 shadow-sm mb-8 overflow-hidden bg-white">
+      <CardContent className="p-0 flex flex-col md:flex-row">
+        
+        {/* Left: User Identity */}
+        <div className="p-6 md:p-8 bg-slate-50/50 border-b md:border-b-0 md:border-r border-slate-100 flex items-center gap-6 min-w-[280px]">
+          <div className="w-20 h-20 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-blue-600 relative">
+            {user.name?.[0]?.toUpperCase()}
+            <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">{user.name}</h2>
+            <p className="text-sm text-slate-500 font-medium">{user.email}</p>
+            <div className="mt-2 inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-100 text-blue-700">
+              {user.role.replace("_", " ")}
             </div>
           </div>
         </div>
 
-        {/* Email section */}
-        <div className="mb-6 pb-6 border-b border-white/20">
-          <p className="text-sm text-white/80 font-medium">Email</p>
-          <p className="text-white/90 break-all">{user.email}</p>
+        {/* Right: Academic/Role Details */}
+        <div className="p-6 md:p-8 flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {user.role === "student" && (
+            <>
+              <DetailRow icon={Hash} label="Entry Number" value={user.entry_no} />
+              <DetailRow icon={Layers} label="Department" value={user.department} />
+              <DetailRow icon={Calendar} label="Current Year" value={`${user.year || 1}st Year`} />
+              <DetailRow icon={BookOpen} label="Semester" value={user.semester} />
+            </>
+          )}
+
+          {user.role === "instructor" && (
+            <>
+              <DetailRow icon={Layers} label="Department" value={user.department || "General"} />
+              <DetailRow icon={BookOpen} label="Courses Active" value="Check Dashboard" />
+            </>
+          )}
+          
+          {(user.role === "admin" || user.role === "faculty_advisor") && (
+             <DetailRow icon={User} label="Admin Level" value="Superuser" />
+          )}
         </div>
 
-        {/* Role-specific details grid */}
-        {details.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {details.map((detail, idx) => (
-              <div key={idx} className="bg-white/15 hover:bg-white/25 transition-all rounded-xl p-4 backdrop-blur-md border border-white/10">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xl">{detail.icon}</span>
-                  <p className="text-xs text-white/80 font-semibold uppercase tracking-wide">{detail.label}</p>
-                </div>
-                <p className="text-lg font-bold text-white">{detail.value}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

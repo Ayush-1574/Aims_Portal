@@ -7,20 +7,3 @@ export const checkAdmin = (req, res, next) => {
   }
   next();
 };
-
-export const logAudit = async (adminId, action, targetUserId, changes, reason, req) => {
-  const AuditLog = (await import("../models/AuditLog.js")).default;
-  
-  try {
-    await AuditLog.create({
-      adminId,
-      action,
-      targetUserId,
-      changes,
-      reason,
-      ipAddress: req.ip || req.connection.remoteAddress
-    });
-  } catch (err) {
-    console.error("Failed to log audit:", err);
-  }
-};
