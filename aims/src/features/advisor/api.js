@@ -27,7 +27,7 @@ export const fetchEnrollmentRequests = async () => {
   // Backend returns { success: true, data: [...] }
   return res.data.data;
 };
-
+ 
 export const approveEnrollment = async (enrollmentId) => {
   const res = await client.post(`/enrollment/faculty_advisor/approve/${enrollmentId}`);
   return res.data;
