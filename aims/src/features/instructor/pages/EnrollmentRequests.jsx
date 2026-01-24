@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchEnrollmentRequests, approveEnrollment, rejectEnrollment } from "../api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {Badge}from "@/components/ui/badge";
 import { Check, X, User, Clock, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 

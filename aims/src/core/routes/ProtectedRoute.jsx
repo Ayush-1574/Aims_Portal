@@ -10,10 +10,24 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   // Not logged in
   if (!user) return <Navigate to="/login" replace />;
 
-  // Role mismatch
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  // --- CHANGED LOGIC STARTS HERE ---
+  // Check if the user has permission.
+  // We use .some() to check if ANY of the allowed roles match the user's role/capabilities
+  const isAllowed = allowedRoles ? allowedRoles.some(role => {
+    // 1. Exact match (e.g. Student accessing Student route)
+    if (user.role === role) return true;
+    
+    // 2. Hierarchy match: Advisor accessing Instructor route
+    // If the route allows 'instructor', we also allow 'faculty_advisor'
+    if (role === 'instructor' && user.role === 'faculty_advisor') return true;
+    
+    return false;
+  }) : true; // If allowedRoles is undefined, allow everyone (optional safety)
+
+  if (!isAllowed) {
     return <Navigate to="/" replace />;
   }
+  // --- CHANGED LOGIC ENDS HERE ---
 
   return children;
 }

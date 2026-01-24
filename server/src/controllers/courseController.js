@@ -4,27 +4,35 @@ import User from "../models/Auth/UserModel.js";
 /**
  * Instructor offers a course
  */
+
 export const offerCourse = async (req, res) => {
   try {
-    const { courseCode , title, dept, year, ltp, session } = req.body;
-    console.log("Offering course:", courseCode, "for dept:", dept, "year:", year);
-    
-    const course = await Course.create({
+    const { courseCode, title, session } = req.body;
+
+    const existingCourse = await Course.findOne({
       courseCode,
-      title,
-      dept,
-      year,
-      ltp,
-      session,
-      instructor: req.user.userId, 
-      status: "PENDING_APPROVAL"
+      session
     });
-    
-    console.log("Course created:", course._id);
-    return res.json({ success: true, course});
-    
+
+    if (existingCourse) {
+      return res.status(400).json({
+        success: false,
+        msg: "Course code already exists for this session"
+      });
+    }
+
+    const course = await Course.create({
+      ...req.body,
+      instructor: req.user.userId
+    });
+
+    return res.json({ success: true, course });
+
   } catch (err) {
-    return res.status(500).json({ success: false, msg: err.message });
+    return res.status(500).json({
+      success: false,
+      msg: err.message
+    });
   }
 };
 

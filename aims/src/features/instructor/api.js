@@ -38,3 +38,7 @@ export const updateStudentGrade = async (enrollmentId, payload) => {
   const res = await client.patch(`/enrollment/${enrollmentId}/update-record`, payload);
   return res.data;
 };
+
+// Instructor views feedback dashboard
+export const getInstructorFeedback = () =>
+  client.get("/feedback/instructor");

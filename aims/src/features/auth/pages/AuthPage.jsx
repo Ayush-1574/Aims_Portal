@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/core/context/AuthContext";
 import client from "@/core/api/client"; 
-import { useNavigate } from "react-router-dom"; // <--- 1. Import this
+import { useNavigate } from "react-router-dom"; 
 import AuthEmailStep from "../components/AuthEmailStep";
 import AuthOtpStep from "../components/AuthOtpStep";
 import AuthRegisterStep from "../components/AuthRegisterStep";
@@ -16,17 +16,16 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   
   const { login, user } = useAuth(); 
-  const navigate = useNavigate(); // <--- 2. Initialize hook
+  const navigate = useNavigate();
 
-  // <--- 3. Auto-Redirect if already logged in
+  // --- Auto-Redirect ---
   useEffect(() => {
     if (user) {
-      navigate("/"); // Sends to App.jsx -> HomeRoute -> Dashboard
+      navigate("/");
     }
   }, [user, navigate]);
 
   // --- HANDLERS ---
-
   const handleSendOtp = async (inputEmail) => {
     setLoading(true);
     setError("");
@@ -50,7 +49,7 @@ export default function AuthPage() {
     setError("");
     try {
       await login(email, inputOtp);
-      navigate("/"); // <--- 4. Redirect immediately on success
+      navigate("/");
     } catch (err) {
       if (err.response?.status === 404 || err.response?.data?.code === "USER_NOT_FOUND") {
         setOtp(inputOtp); 
@@ -67,7 +66,7 @@ export default function AuthPage() {
     setLoading(true);
     setError("");
     try {
-      await client.post("/auth/signup", { // Ensure endpoint matches api.js (signup vs register)
+      await client.post("/auth/signup", { 
         email,
         otp, 
         role,
@@ -75,7 +74,7 @@ export default function AuthPage() {
       });
       
       await login(email, otp);
-      navigate("/"); // <--- 5. Redirect after registration
+      navigate("/");
     } catch (err) {
       setError(err.response?.data?.msg || "Registration failed.");
     } finally {
@@ -84,41 +83,83 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+    <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
+      
+      {/* --- LEFT SIDE: Image Section --- */}
+      <div className="hidden lg:block relative h-full w-full bg-slate-900 overflow-hidden">
+        {/* Campus Image */}
+        <img 
+          src="/bg.jpg" 
+          alt="Campus Background" 
+          className="absolute inset-0 h-full w-full object-cover opacity-90 transition-transform duration-[20s] hover:scale-105"
+        />
+        
+        {/* Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
 
-      <div className="w-full max-w-md relative z-10 animate-slide-up">
-        {step === "EMAIL" && (
-          <AuthEmailStep 
-            onSubmit={handleSendOtp} 
-            loading={loading} 
-            error={error} 
-          />
-        )}
+        {/* Branding Text */}
+        <div className="absolute bottom-0 left-0 p-12 text-white z-10">
+          <div className="flex items-center gap-4 mb-6">
+             {/* --- UPDATED: IIT Ropar Logo --- */}
+             <div className="bg-white/10 backdrop-blur-sm p-2 rounded-xl border border-white/20 shadow-xl">
+               <img 
+                 src="/header-logo.png" 
+                 alt="IIT Ropar Logo" 
+                 className="h-16 w-auto object-contain drop-shadow-md" 
+               />
+             </div>
+             
+             <div>
+               <h1 className="text-3xl font-bold tracking-tight text-white leading-none">AIMS Portal</h1>
+               <p className="text-sm text-slate-300 font-medium mt-1 tracking-wide uppercase opacity-80">
+                 Indian Institute of Technology Ropar
+               </p>
+             </div>
+          </div>
+          
+          <p className="text-slate-300 text-lg max-w-md leading-relaxed border-l-2 border-blue-500 pl-4">
+            Welcome to the Academic Information Management System. 
+            Manage your courses, grades, and academic profile seamlessly.
+          </p>
+        </div>
+      </div>
 
-        {step === "OTP" && (
-          <AuthOtpStep 
-            email={email}
-            onSubmit={handleVerifyOtp} 
-            onResend={() => handleSendOtp(email)}
-            onBack={() => setStep("EMAIL")}
-            loading={loading} 
-            error={error} 
-          />
-        )}
+      {/* --- RIGHT SIDE: Form Section --- */}
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 relative">
+        <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none"></div>
 
-        {step === "REGISTER" && (
-          <AuthRegisterStep
-            email={email}
-            role={role}
-            setRole={setRole}
-            onSubmit={handleRegister}
-            loading={loading}
-            error={error}
-            onBack={() => setStep("OTP")}
-          />
-        )}
+        <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {step === "EMAIL" && (
+            <AuthEmailStep 
+              onSubmit={handleSendOtp} 
+              loading={loading} 
+              error={error} 
+            />
+          )}
+
+          {step === "OTP" && (
+            <AuthOtpStep 
+              email={email}
+              onSubmit={handleVerifyOtp} 
+              onResend={() => handleSendOtp(email)}
+              onBack={() => setStep("EMAIL")}
+              loading={loading} 
+              error={error} 
+            />
+          )}
+
+          {step === "REGISTER" && (
+            <AuthRegisterStep
+              email={email}
+              role={role}
+              setRole={setRole}
+              onSubmit={handleRegister}
+              loading={loading}
+              error={error}
+              onBack={() => setStep("OTP")}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

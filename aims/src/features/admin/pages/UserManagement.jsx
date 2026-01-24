@@ -3,8 +3,8 @@ import { fetchAllUsers, deleteUser, fetchUserDetails, updateUser } from "../api"
 import { Search, Filter, Trash2, Edit2, ChevronLeft, ChevronRight, X, User, Save } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 export default function UserManagement() {
   // --- STATE ---

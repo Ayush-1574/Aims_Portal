@@ -6,6 +6,7 @@ import {
   BookOpen, Users, FileText, CheckSquare, Activity, 
   Shield, UserPlus
 } from "lucide-react";
+import UserPill from "@/components/ui/UserPill";
 
 // 1. ADD 'children' HERE
 export default function DashboardLayout({ role, children }) {
@@ -35,7 +36,7 @@ export default function DashboardLayout({ role, children }) {
         ];
       case "faculty_advisor":
         return [
-          { icon: CheckSquare, label: "Course Approvals", path: "/advisor/courses" },
+          // { icon: CheckSquare, label: "Course Approvals", path: "/advisor/courses" },
           { icon: Users, label: "Student Enrollments", path: "/advisor/enrollments" },
           { icon: Activity, label: "System Status", path: "/advisor/status" },
         ];
@@ -151,15 +152,7 @@ export default function DashboardLayout({ role, children }) {
 
           {/* User Profile Pill */}
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 pl-1 pr-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
-               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-                 {user?.name?.[0]?.toUpperCase() || "U"}
-               </div>
-               <div className="text-left hidden md:block">
-                 <p className="text-sm font-bold text-slate-700 leading-tight">{user?.name}</p>
-                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{role?.replace("_", " ")}</p>
-               </div>
-            </div>
+             <UserPill />
           </div>
         </header>
 

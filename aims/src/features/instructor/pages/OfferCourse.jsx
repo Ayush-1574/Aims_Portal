@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {toast} from "sonner"
 
 export default function OfferCourse() {
   const [formData, setFormData] = useState({
@@ -23,13 +24,14 @@ export default function OfferCourse() {
 
     try {
       await offerCourse(formData);
-      setStatus({ type: "success", msg: "Course created successfully!" });
+      toast.success( "Course created successfully!" );
       setFormData({ 
         title: "", courseCode: "", dept: "", credits: 3, 
         description: "", session: "2025-2026", year: 1, ltp: "3-0-0" 
       });
     } catch (err) {
-      setStatus({ type: "error", msg: err.response?.data?.msg || "Failed to offer course." });
+      msg: err.response?.data?.msg || "Failed to offer course."
+      toast.error( msg );
     } finally {
       setLoading(false);
     }

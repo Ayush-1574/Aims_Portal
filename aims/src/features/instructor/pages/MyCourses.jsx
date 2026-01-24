@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import client from "@/core/api/client"; // Use your axios client
+import client from "@/core/api/client"; 
 import { Link } from "react-router-dom";
 import { 
   BookOpen, Users, ArrowRight, PlusCircle, Calendar, 
-  Layers, GraduationCap, School 
+  Layers, GraduationCap, School, Loader2 
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {Badge} from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MyCourses() {
@@ -17,7 +17,7 @@ export default function MyCourses() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Matches route: router.get("/my", ...)
+        // Fetch instructor's courses
         const res = await client.get("/courses/my");
         setCourses(res.data.courses || []);
       } catch (err) {
@@ -45,7 +45,7 @@ export default function MyCourses() {
            <p className="text-slate-500 mt-1">Manage your active courses and student enrollments.</p>
         </div>
         <Link to="/instructor/offer">
-          <Button className="gap-2 shadow-lg bg-blue-600 hover:bg-blue-700 text-white">
+          <Button className="gap-2 shadow-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold">
             <PlusCircle size={18} /> Offer New Course
           </Button>
         </Link>
@@ -64,57 +64,63 @@ export default function MyCourses() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => (
-            <Card key={course._id} className="group hover:shadow-xl transition-all duration-300 border border-slate-200 bg-white overflow-hidden">
-               {/* Decorative Top Strip */}
-               <div className={`h-1.5 w-full ${
-                 course.status === 'OPEN' ? 'bg-green-500' : 'bg-blue-500'
+            <Card key={course._id} className="group flex flex-col h-full bg-white border border-slate-200 hover:shadow-xl hover:border-blue-200 transition-all duration-300 overflow-hidden relative">
+               
+               {/* Decorative Status Strip */}
+               <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                 course.status === 'OPEN' ? 'bg-green-500' : 
+                 course.status === 'REJECTED' ? 'bg-red-500' : 'bg-amber-400'
                }`} />
 
-               <CardContent className="p-6">
-                 {/* Header */}
-                 <div className="flex justify-between items-start mb-4">
-                    <Badge variant="outline" className="font-mono text-xs bg-slate-50 text-slate-700 border-slate-200">
+               <CardContent className="p-6 pl-7 flex flex-col h-full">
+                 
+                 {/* Header: Code & Status Badges */}
+                 <div className="flex justify-between items-start mb-3">
+                    <Badge variant="outline" className="font-mono font-bold text-slate-700 bg-slate-50 border-slate-200">
                       {course.courseCode}
                     </Badge>
-                    <Badge className={`
-                      ${course.status === 'OPEN' ? 'bg-green-100 text-green-700 hover:bg-green-100' : 'bg-amber-100 text-amber-700 hover:bg-amber-100'}
-                    `}>
-                      {course.status === 'PENDING_APPROVAL' ? 'Pending Approval' : 'Active'}
+                    
+                    <Badge className={`${
+                      course.status === 'OPEN' ? 'bg-green-100 text-green-700 hover:bg-green-100' : 
+                      course.status === 'REJECTED' ? 'bg-red-100 text-red-700 hover:bg-red-100' :
+                      'bg-amber-100 text-amber-700 hover:bg-amber-100'
+                    }`}>
+                      {course.status === 'PENDING_APPROVAL' ? 'Pending' : course.status}
                     </Badge>
                  </div>
 
-                 <h3 className="text-xl font-bold text-slate-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                 <h3 className="text-xl font-bold text-slate-900 mb-4 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
                    {course.title}
                  </h3>
 
                  {/* Rich Details Grid */}
-                 <div className="grid grid-cols-2 gap-y-3 gap-x-2 my-5 text-xs text-slate-600 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                 <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs text-slate-600 bg-slate-50/50 p-3 rounded-xl border border-slate-100 mb-6">
                     <div className="flex items-center gap-2">
-                        <School size={14} className="text-blue-500"/>
-                        <span className="font-semibold">{course.dept}</span>
+                        <School size={14} className="text-blue-500 shrink-0"/>
+                        <span className="font-semibold truncate" title={course.dept}>{course.dept} Dept</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <GraduationCap size={14} className="text-purple-500"/>
+                        <GraduationCap size={14} className="text-purple-500 shrink-0"/>
                         <span>Year {course.year}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Calendar size={14} className="text-orange-500"/>
+                        <Calendar size={14} className="text-orange-500 shrink-0"/>
                         <span>{course.session}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Layers size={14} className="text-indigo-500"/>
+                        <Layers size={14} className="text-indigo-500 shrink-0"/>
                         <span className="font-mono">{course.ltp}</span>
                     </div>
                  </div>
 
-                 {/* Action Footer */}
-                 <div className="mt-4 pt-4 border-t border-slate-100">
+                 {/* Footer Action */}
+                 <div className="mt-auto pt-4 border-t border-slate-50">
                     <Link to={`/instructor/enrolled/${course._id}`}>
                         <Button variant="outline" className="w-full justify-between group-hover:border-blue-500 group-hover:text-blue-600 transition-all">
-                        <span className="flex items-center gap-2">
-                            <Users size={16} /> Manage Students
-                        </span>
-                        <ArrowRight size={16} />
+                           <span className="flex items-center gap-2">
+                               <Users size={16} /> Manage Students
+                           </span>
+                           <ArrowRight size={16} />
                         </Button>
                     </Link>
                  </div>
