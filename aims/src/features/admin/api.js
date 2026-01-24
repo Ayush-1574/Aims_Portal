@@ -26,12 +26,20 @@ export const fetchUserDetails = async (userId) => {
 
 export const createNewUser = async (formData) => {
   const res = await client.post(`${API_BASE}/users`, formData);
+<<<<<<< HEAD
   return res.data.data;
+=======
+  return res.data;
+>>>>>>> origin/main
 };
 
 export const updateUser = async (userId, userData) => {
   const res = await client.put(`${API_BASE}/users/${userId}`, userData);
+<<<<<<< HEAD
   return res.data.data;
+=======
+  return res.data;
+>>>>>>> origin/main
 };
 
 export const deleteUser = async (userId, reason) => {
@@ -39,7 +47,11 @@ export const deleteUser = async (userId, reason) => {
   const res = await client.delete(`${API_BASE}/users/${userId}`, {
     data: { reason }
   });
+<<<<<<< HEAD
   return res.data.data;
+=======
+  return res.data;
+>>>>>>> origin/main
 };
 
 export const bulkRoleConversion = async (userIds, newRole, reason) => {
@@ -48,7 +60,11 @@ export const bulkRoleConversion = async (userIds, newRole, reason) => {
     newRole,
     reason
   });
+<<<<<<< HEAD
   return res.data.data;
+=======
+  return res.data;
+>>>>>>> origin/main
 };
 
 // --- AUDIT LOGS ---

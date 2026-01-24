@@ -24,6 +24,7 @@ export default function UserManagement() {
     setLoading(true);
     try {
       const res = await fetchAllUsers(filters, page, 8); // Limit 8 items per page
+     
       setUsers(res.users || []);
       setTotalPages(res.pagination?.pages || 1);
     } catch (err) {

@@ -11,7 +11,7 @@ export const requestEnrollment = async (req, res) => {
     const student = await User.findById(req.user.userId);
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
-    }
+    } 
 
     const existing = await Enrollment.findOne({
       course: courseId,
@@ -139,7 +139,12 @@ export const getInstructorEnrollRequests = async (req, res) => {
 // ADVISOR: view requests
 export const getAdvisorEnrollRequests = async (req, res) => {
   try {
-    const data = await Enrollment.find({ status: "PENDING_ADVISOR" })
+    const advisorId = req.user.userId;
+
+    const data = await Enrollment.find({
+      status: "PENDING_ADVISOR",
+      faculty_advisor: advisorId
+    })
       .populate("course", "courseCode title session")
       .populate("student", "name email");
 

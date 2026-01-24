@@ -3,6 +3,7 @@ import axios from "axios";
 // Create the axios instance
 const client = axios.create({
   baseURL: "http://localhost:5000",
+  withCredentials: true, // ✅ REQUIRED to send cookies
   headers: {
     "Content-Type": "application/json",
   },
@@ -27,6 +28,8 @@ client.interceptors.response.use(
     if (error.response?.status === 401) {
       sessionStorage.removeItem("token");
       // Optional: Redirect to login if needed
+      console.log("Unauthorized – user logged out or session expired");
+      // Optional redirect
       // window.location.href = "/login";
     }
     return Promise.reject(error);

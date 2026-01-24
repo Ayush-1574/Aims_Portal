@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner"
+
 
 export default function CreateUser({ onUserCreated, onCancel }) {
   const [formData, setFormData] = useState({
@@ -14,32 +16,44 @@ export default function CreateUser({ onUserCreated, onCancel }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", msg: "" });
 
+
+
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleRoleSelect = (role) => setFormData({ ...formData, role });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setStatus({ type: "", msg: "" });
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const result = await createNewUser(formData);
-      if (result.success) {
-        setStatus({ type: "success", msg: `User "${formData.name}" created successfully!` });
-        // Reset form
-        setFormData({ 
-          name: "", email: "", role: "student", entry_no: "", 
-          department: "", year: "", semester: "", advisor_department: "", advisor_year: "" 
-        });
-        if (onUserCreated) setTimeout(onUserCreated, 2000);
-      }
-    } catch (err) {
-      setStatus({ type: "error", msg: err.response?.data?.msg || "Failed to create user" });
-    } finally {
-      setLoading(false);
+  try {
+    const result = await createNewUser(formData);
+
+    if (result.success) {
+      toast.success(`User "${formData.name}" created successfully!`);
+
+      setFormData({
+        name: "",
+        email: "",
+        role: "student",
+        entry_no: "",
+        department: "",
+        year: "",
+        semester: "",
+        advisor_department: "",
+        advisor_year: ""
+      });
+
+      if (onUserCreated) onUserCreated();
     }
-  };
+  } catch (err) {
+    toast.error(err.response?.data?.msg || "Failed to create user");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const roles = [
     { id: 'student', label: 'Student', icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
@@ -169,6 +183,10 @@ export default function CreateUser({ onUserCreated, onCancel }) {
                           <option value="ME">ME</option>
                        </select>
                     </div>
+                    <div className="space-y-2">
+                       <Label>Year</Label>
+                       <Input type="number" name="year" value={formData.year} onChange={handleChange} placeholder="1" required />
+                    </div>
                  </div>
               </div>
             )}
@@ -188,4 +206,4 @@ export default function CreateUser({ onUserCreated, onCancel }) {
       </Card>
     </div>
   );
-}
+} 
