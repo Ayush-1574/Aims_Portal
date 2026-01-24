@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserPlus, ArrowLeft, GraduationCap, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { fetchGlobalData } from "@/features/admin/api";
 
 export default function AuthRegisterStep({ email, role, setRole, onSubmit, loading, error, onBack }) {
   const [formData, setFormData] = useState({
@@ -12,6 +13,21 @@ export default function AuthRegisterStep({ email, role, setRole, onSubmit, loadi
     entryNo: "", // Student only
     gender: "", // Student only
   });
+  const [departments, setDepartments] = useState([]);
+
+  // Load departments from GlobalData
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const data = await fetchGlobalData("DEPARTMENT");
+        console.log("Departments loaded:", data);
+        setDepartments(data.items || []);
+      } catch (err) {
+        console.error("Error loading departments:", err);
+      }
+    };
+    loadDepartments();
+  }, []);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -81,9 +97,9 @@ export default function AuthRegisterStep({ email, role, setRole, onSubmit, loadi
                  required
                >
                  <option value="">Select Department</option>
-                 <option value="CSE">Computer Science (CSE)</option>
-                 <option value="EE">Electrical (EE)</option>
-                 <option value="ME">Mechanical (ME)</option>
+                 {departments.filter(d => d.isActive).map(dept => (
+                   <option key={dept._id} value={dept.key}>{dept.value}</option>
+                 ))}
                </select>
              </div>
 

@@ -74,3 +74,33 @@ export const rejectCourse = async (courseId) => {
   const res = await client.post(`/courses/reject/${courseId}`);
   return res.data;
 };
+
+// --- GLOBAL DATA MANAGEMENT ---
+// Public read endpoint
+export const fetchGlobalData = async (type) => {
+  const res = await client.get(`/global-data/${type}`);
+  return res.data.data;
+};
+
+// Admin-only write endpoints
+export const createGlobalDataEntry = async (type, key, value) => {
+  const res = await client.post(`${API_BASE}/global-data`, {
+    type,
+    key,
+    value
+  });
+  return res.data;
+};
+
+export const updateGlobalDataEntry = async (type, itemId, value, isActive) => {
+  const res = await client.put(`${API_BASE}/global-data/${type}/${itemId}`, {
+    value,
+    isActive
+  });
+  return res.data;
+};
+
+export const deleteGlobalDataEntry = async (type, itemId) => {
+  const res = await client.delete(`${API_BASE}/global-data/${type}/${itemId}`);
+  return res.data;
+};

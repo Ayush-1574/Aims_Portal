@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchDashboardStats } from "../api";
+import { fetchDashboardStats, fetchGlobalData } from "../api";
 import { 
   Users, BookOpen, Shield, Server, Activity, 
   Plus, FileText, Settings, Bell, Search, 
@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 export default function AdminOverview() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [departments, setDepartments] = useState([]);
+  const [sessions, setSessions] = useState([]);
 
   // Mock Activity Data (Placeholder for real logs)
   const recentActivity = [
@@ -27,6 +29,14 @@ export default function AdminOverview() {
       try {
         const data = await fetchDashboardStats();
         setStats(data);
+        
+        // Load departments and sessions
+        const deptData = await fetchGlobalData("DEPARTMENT");
+        const sessionData = await fetchGlobalData("SESSION");
+        console.log("Admin Overview - Depts:", deptData);
+        console.log("Admin Overview - Sessions:", sessionData);
+        setDepartments(deptData.items || []);
+        setSessions(sessionData.items || []);
       } catch (err) {
         console.error("Failed to load stats:", err);
       } finally {
@@ -157,6 +167,47 @@ export default function AdminOverview() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Global Data Summary */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="border-slate-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold text-slate-700">Active Departments</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {departments.filter(d => d.isActive).slice(0, 4).map((dept) => (
+                    <div key={dept._id} className="flex items-center gap-2 text-sm">
+                      <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
+                      <span className="text-slate-700">{dept.value}</span>
+                    </div>
+                  ))}
+                  {departments.filter(d => d.isActive).length > 4 && (
+                    <p className="text-xs text-slate-500 mt-2">+{departments.filter(d => d.isActive).length - 4} more</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold text-slate-700">Available Sessions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {sessions.filter(s => s.isActive).slice(0, 4).map((session) => (
+                    <div key={session._id} className="flex items-center gap-2 text-sm">
+                      <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
+                      <span className="text-slate-700">{session.value}</span>
+                    </div>
+                  ))}
+                  {sessions.filter(s => s.isActive).length > 4 && (
+                    <p className="text-xs text-slate-500 mt-2">+{sessions.filter(s => s.isActive).length - 4} more</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Right Column: Quick Actions & Server Health */}
@@ -188,6 +239,17 @@ export default function AdminOverview() {
               </Card>
             </Link>
 
+            <Link to="/admin/global-data" className="block">
+              <Card className="hover:border-blue-300 hover:shadow-md transition-all cursor-pointer h-full">
+                <CardContent className="p-5 flex flex-col items-center justify-center text-center gap-3">
+                  <div className="p-3 bg-cyan-50 text-cyan-600 rounded-full">
+                    <Settings size={20} />
+                  </div>
+                  <span className="text-sm font-bold text-slate-700">Manage Data</span>
+                </CardContent>
+              </Card>
+            </Link>
+
             <div className="block">
               <Card className="hover:border-blue-300 hover:shadow-md transition-all cursor-pointer h-full">
                 <CardContent className="p-5 flex flex-col items-center justify-center text-center gap-3">
@@ -195,17 +257,6 @@ export default function AdminOverview() {
                     <FileText size={20} />
                   </div>
                   <span className="text-sm font-bold text-slate-700">System Logs</span>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="block">
-              <Card className="hover:border-blue-300 hover:shadow-md transition-all cursor-pointer h-full">
-                <CardContent className="p-5 flex flex-col items-center justify-center text-center gap-3">
-                  <div className="p-3 bg-slate-50 text-slate-600 rounded-full">
-                    <Settings size={20} />
-                  </div>
-                  <span className="text-sm font-bold text-slate-700">Settings</span>
                 </CardContent>
               </Card>
             </div>

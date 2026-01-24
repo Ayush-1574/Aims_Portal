@@ -1,4 +1,5 @@
 import User from "../models/Auth/UserModel.js";
+import GlobalData from "../models/GlobalData.js";
 
 // Get dashboard statistics
 export const getDashboardStats = async (req, res) => {
@@ -286,5 +287,179 @@ export const createUser = async (req, res) => {
   } catch (err) {
     console.error("Error creating user:", err);
     res.status(500).json({ success: false, msg: "Failed to create user: " + err.message });
+  }
+};
+
+// ===== GLOBAL DATA MANAGEMENT =====
+
+// Get global data by type (departments, sessions, categories, grade scales)
+export const getGlobalData = async (req, res) => {
+  try {
+    const { type } = req.params;
+
+    // Validate type
+    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE"];
+    if (!validTypes.includes(type.toUpperCase())) {
+      return res.status(400).json({ success: false, msg: "Invalid data type" });
+    }
+
+    const data = await GlobalData.findOne({ type: type.toUpperCase() });
+
+    if (!data) {
+      return res.json({
+        success: true,
+        data: {
+          type: type.toUpperCase(),
+          items: []
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        type: type.toUpperCase(),
+        items: data.items || []
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching global data:", err);
+    res.status(500).json({ success: false, msg: "Failed to fetch global data" });
+  }
+};
+
+// Create new global data entry (add item to array)
+export const createGlobalData = async (req, res) => {
+  try {
+    const { type, key, value } = req.body;
+
+    // Validate required fields
+    if (!type || !key || !value) {
+      return res.status(400).json({
+        success: false,
+        msg: "Type, key, and value are required"
+      });
+    }
+
+    // Validate type
+    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE"];
+    if (!validTypes.includes(type.toUpperCase())) {
+      return res.status(400).json({ success: false, msg: "Invalid data type" });
+    }
+
+    // Find or create the document for this type
+    let globalData = await GlobalData.findOne({ type: type.toUpperCase() });
+
+    if (!globalData) {
+      // Create new document for this type
+      globalData = await GlobalData.create({
+        type: type.toUpperCase(),
+        items: [{
+          key: key.toUpperCase(),
+          value,
+          isActive: true
+        }]
+      });
+    } else {
+      // Check if key already exists
+      const existingItem = globalData.items.find(item => item.key.toUpperCase() === key.toUpperCase());
+      if (existingItem) {
+        return res.status(400).json({
+          success: false,
+          msg: `${key} already exists for ${type}`
+        });
+      }
+
+      // Add new item to array
+      globalData.items.push({
+        key: key.toUpperCase(),
+        value,
+        isActive: true
+      });
+      await globalData.save();
+    }
+
+    res.json({
+      success: true,
+      msg: "Global data created successfully",
+      data: globalData
+    });
+  } catch (err) {
+    console.error("Error creating global data:", err);
+    res.status(500).json({ success: false, msg: "Failed to create global data" });
+  }
+};
+
+// Update global data entry (update item in array)
+export const updateGlobalData = async (req, res) => {
+  try {
+    const { type, itemId } = req.params;
+    const { value, isActive } = req.body;
+
+    // Validate type
+    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE"];
+    if (!validTypes.includes(type.toUpperCase())) {
+      return res.status(400).json({ success: false, msg: "Invalid data type" });
+    }
+
+    const globalData = await GlobalData.findOne({ type: type.toUpperCase() });
+    if (!globalData) {
+      return res.status(404).json({ success: false, msg: "Data type not found" });
+    }
+
+    // Find and update the item
+    const item = globalData.items.id(itemId);
+    if (!item) {
+      return res.status(404).json({ success: false, msg: "Item not found" });
+    }
+
+    if (value !== undefined) item.value = value;
+    if (isActive !== undefined) item.isActive = isActive;
+
+    await globalData.save();
+
+    res.json({
+      success: true,
+      msg: "Global data updated successfully",
+      data: globalData
+    });
+  } catch (err) {
+    console.error("Error updating global data:", err);
+    res.status(500).json({ success: false, msg: "Failed to update global data" });
+  }
+};
+
+// Delete global data entry (remove item from array)
+export const deleteGlobalData = async (req, res) => {
+  try {
+    const { type, itemId } = req.params;
+
+    // Validate type
+    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE"];
+    if (!validTypes.includes(type.toUpperCase())) {
+      return res.status(400).json({ success: false, msg: "Invalid data type" });
+    }
+
+    const globalData = await GlobalData.findOne({ type: type.toUpperCase() });
+    if (!globalData) {
+      return res.status(404).json({ success: false, msg: "Data type not found" });
+    }
+
+    // Remove item from array
+    const item = globalData.items.id(itemId);
+    if (!item) {
+      return res.status(404).json({ success: false, msg: "Item not found" });
+    }
+
+    item.deleteOne();
+    await globalData.save();
+
+    res.json({
+      success: true,
+      msg: "Global data deleted successfully"
+    });
+  } catch (err) {
+    console.error("Error deleting global data:", err);
+    res.status(500).json({ success: false, msg: "Failed to delete global data" });
   }
 };

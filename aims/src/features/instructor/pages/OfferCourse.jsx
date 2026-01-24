@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { offerCourse } from "../api";
+import { fetchGlobalData } from "@/features/admin/api";
 import { PlusCircle, Book, Layers, Layout, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,10 +10,36 @@ import { Label } from "@/components/ui/label";
 export default function OfferCourse() {
   const [formData, setFormData] = useState({
     title: "", courseCode: "", dept: "", credits: 3,
-    description: "", session: "2025-2026", year: 1, ltp: "3-0-0"
+    description: "", session: "", year: 1, ltp: "3-0-0"
   });
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", msg: "" });
+  const [departments, setDepartments] = useState([]);
+  const [sessions, setSessions] = useState([]);
+
+  // Load departments and sessions on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const deptData = await fetchGlobalData("DEPARTMENT");
+        const sessionData = await fetchGlobalData("SESSION");
+        
+        console.log("Dept Data:", deptData);
+        console.log("Session Data:", sessionData);
+        
+        setDepartments(deptData.items || []);
+        setSessions(sessionData.items || []);
+        
+        // Set default session if available
+        if (sessionData.items && sessionData.items.length > 0) {
+          setFormData(prev => ({ ...prev, session: sessionData.items[0].key }));
+        }
+      } catch (err) {
+        console.error("Error loading global data:", err);
+      }
+    };
+    loadData();
+  }, []);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -26,7 +53,7 @@ export default function OfferCourse() {
       setStatus({ type: "success", msg: "Course created successfully!" });
       setFormData({ 
         title: "", courseCode: "", dept: "", credits: 3, 
-        description: "", session: "2025-2026", year: 1, ltp: "3-0-0" 
+        description: "", session: sessions.length > 0 ? sessions[0].key : "", year: 1, ltp: "3-0-0" 
       });
     } catch (err) {
       setStatus({ type: "error", msg: err.response?.data?.msg || "Failed to offer course." });
@@ -82,10 +109,26 @@ export default function OfferCourse() {
                   className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                   required
                 >
-                  <option value="">Select Dept</option>
-                  <option value="CSE">Computer Science</option>
-                  <option value="EE">Electrical Eng</option>
-                  <option value="ME">Mechanical Eng</option>
+                  <option value="">Select Department</option>
+                  {departments.filter(d => d.isActive).map(dept => (
+                    <option key={dept._id} value={dept.key}>{dept.value}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Session</Label>
+                <select 
+                  name="session" 
+                  value={formData.session} 
+                  onChange={handleChange}
+                  className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  required
+                >
+                  <option value="">Select Session</option>
+                  {sessions.filter(s => s.isActive).map(session => (
+                    <option key={session._id} value={session.key}>{session.value}</option>
+                  ))}
                 </select>
               </div>
             </div>

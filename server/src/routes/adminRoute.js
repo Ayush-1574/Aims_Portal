@@ -9,7 +9,11 @@ import {
   updateUser,
   deleteUser,
   bulkRoleConversion,
-  createUser
+  createUser,
+  getGlobalData,
+  createGlobalData,
+  updateGlobalData,
+  deleteGlobalData
 } from "../controllers/adminController.js";
 
 const router = express.Router();
@@ -30,5 +34,11 @@ router.delete("/users/:userId", deleteUser);
 
 // Bulk Operations
 router.post("/users/bulk/role-conversion", bulkRoleConversion);
+
+// Global Data Management
+router.get("/global-data/:type", getGlobalData);
+router.post("/global-data", createGlobalData);
+router.put("/global-data/:type/:itemId", updateGlobalData);
+router.delete("/global-data/:type/:itemId", deleteGlobalData);
 
 export default router;

@@ -6,6 +6,7 @@ import authRoutes from "./src/routes/authRoute.js";
 import courseRoutes from "./src/routes/courseRoute.js";
 import enrollmentRoutes from "./src/routes/enrollmentRoute.js";
 import adminRoutes from "./src/routes/adminRoute.js";
+import globalDataRoutes from "./src/routes/globalDataRoute.js";
 import cookieParser from "cookie-parser";
 
 console.log("BACKEND FILE RUNNING");
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 app.use("/auth", authRoutes);
 app.use("/courses", courseRoutes);
 app.use("/enrollment", enrollmentRoutes);
+app.use("/global-data", globalDataRoutes);
 app.use("/admin", adminRoutes);
 
 app.listen(5000, () => console.log("Server running on port 5000"));
