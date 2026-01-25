@@ -6,9 +6,11 @@ import {
   Users, FileText, CheckSquare, Activity, UserPlus
 } from "lucide-react";
 import UserPill from "@/components/ui/UserPill";
+import { getFeedbackStatus } from "@/features/admin/api";
 
 export default function DashboardLayout({ role, children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [feedbackActive, setFeedbackActive] = useState(false);
   const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
