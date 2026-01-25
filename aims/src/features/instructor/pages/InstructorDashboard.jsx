@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import DashboardLayout from "@/layout/DashboardLayout";
+import InstructorFeedback from "./InstructorFeedback";
+
 
 // Import the updated pages
 import MyCourses from "./MyCourses";
@@ -17,6 +19,8 @@ export default function InstructorDashboard() {
         <Route path="courses" element={<MyCourses />} />
         <Route path="offer" element={<OfferCourse />} />
         <Route path="requests" element={<EnrollmentRequests />} />
+        <Route path="feedback" element={<InstructorFeedback />} />
+
         
         {/* Sub-routes */}
         <Route path="enrolled/:courseId" element={<EnrolledStudents />} />

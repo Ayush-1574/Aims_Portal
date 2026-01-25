@@ -220,3 +220,47 @@ export const updateEnrollmentRecord = async (req, res) => {
     return res.status(500).json({ success: false, msg: err.message });
   }
 };
+
+import SystemSettings from "../models/SystemSettingsModel.js";
+
+export const getMyCurrentSessionEnrollments = async (req, res) => {
+  try {
+    // Get current session set by admin
+    const sessionSetting = await SystemSettings.findOne({
+      key: "feedback_session"
+    });
+
+    if (!sessionSetting) {
+      
+      return res.json({ success: true, data: [] });
+    }
+
+    const currentSession = sessionSetting.value;
+    console.log("Current session:", currentSession);
+
+
+    const data = await Enrollment.find({
+      student: req.user.userId,
+      status: "ENROLLED"
+    }).populate({
+      path: "course",
+      match: { session: currentSession }
+    });
+
+    
+    // Remove non-matching populated docs
+    const filtered = data
+      .filter(e => e.course)
+      .map(e => ({
+        id: e._id,
+        courseId: e.course._id,
+        code: e.course.courseCode,
+        title: e.course.title,
+        session: e.course.session
+      }));
+
+    res.json({ success: true, data: filtered , msg : "hello" });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: err.message });
+  }
+};

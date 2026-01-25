@@ -6,7 +6,6 @@ import AdminOverview from "./AdminOverview";
 import UserManagement from "./UserManagement";
 import CreateUser from "./CreateUser";
 import PendingCourseApprovals from "./PendingCourseApprovals";
-import GlobalDataManagement from "./GlobalDataManagement";
 import AdminFeedbackSettings from "./AdminFeedbackSettings";
 
 export default function AdminDashboard() {
@@ -20,9 +19,8 @@ export default function AdminDashboard() {
         <Route path="users" element={<UserManagement />} />
         <Route path="create-user" element={<CreateUser />} />
         <Route path="course-approvals" element={<PendingCourseApprovals />} />
-        <Route path="global-data" element={<GlobalDataManagement />} />
 
-        {/*  NEW: Feedback Settings */}
+        {/* ✅ NEW: Feedback Settings */}
         <Route path="feedback-settings" element={<AdminFeedbackSettings />} />
         
         {/* Fallback */}

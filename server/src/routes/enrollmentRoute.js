@@ -11,7 +11,8 @@ import {
   getInstructorEnrollRequests,
   getAdvisorEnrollRequests,
   getEnrolledStudents,
-    updateEnrollmentRecord
+    updateEnrollmentRecord,
+    getMyCurrentSessionEnrollments
 
 } from "../controllers/enrollmentController.js";
 
@@ -95,6 +96,12 @@ router.patch(
   auth,
   allowRoles("instructor"),
   updateEnrollmentRecord
+);
+router.get(
+  "/my/current-session",
+  auth,
+  allowRoles("student"),
+  getMyCurrentSessionEnrollments
 );
 
 export default router;

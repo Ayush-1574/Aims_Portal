@@ -19,31 +19,49 @@ export default function DashboardLayout({ role, children }) {
   };
 
   const getLinks = (userRole) => {
-    switch(userRole) {
-      case "student":
-        return [
+    switch (userRole) {
+      case "student": {
+        const links = [
           { icon: LayoutDashboard, label: "Overview", path: "/student/overview" },
           { icon: BookOpen, label: "Course Reg.", path: "/student/courses" },
           { icon: FileText, label: "Academic Record", path: "/student/record" },
         ];
+
+        if (feedbackActive) {
+          links.push({
+            icon: CheckSquare,
+            label: "Course Feedback",
+            path: "/student/feedback",
+          });
+        }
+
+        return links;
+      }
+
       case "instructor":
         return [
           { icon: BookOpen, label: "My Courses", path: "/instructor/courses" },
           { icon: UserPlus, label: "Offer Course", path: "/instructor/offer" },
           { icon: Users, label: "Enrollment Req.", path: "/instructor/requests" },
+          { icon: CheckSquare, label: "Course Feedback", path: "/instructor/feedback" },
         ];
+
       case "faculty_advisor":
         return [
+          { icon: CheckSquare, label: "Course Approvals", path: "/advisor/courses" },
           { icon: Users, label: "Student Enrollments", path: "/advisor/enrollments" },
           { icon: Activity, label: "System Status", path: "/advisor/status" },
         ];
+
       case "admin":
         return [
           { icon: LayoutDashboard, label: "Overview", path: "/admin/overview" },
           { icon: Users, label: "User Management", path: "/admin/users" },
           { icon: UserPlus, label: "Create User", path: "/admin/create-user" },
           { icon: CheckSquare, label: "Course Approvals", path: "/admin/course-approvals" },
+          { icon: CheckSquare, label: "Feedback Settings", path: "/admin/feedback-settings" },
         ];
+
       default:
         return [];
     }
