@@ -16,7 +16,8 @@ const Input = React.forwardRef(({ className, type, ...props }, ref) => {
         "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-slate-900",
         
         // Focus States (Softer Glow)
-        "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/10 focus-visible:border-blue-500",
+// Focus States (Clean Border Only)
+        "outline-none focus:outline-none focus:border-blue-500 focus:ring-0",
         
         // Hover State
         "hover:border-blue-300",
