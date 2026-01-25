@@ -160,19 +160,22 @@ export const getStudentEnrollments = async (req, res) => {
     const data = await Enrollment.find({ student: req.user.userId })
       .populate("course");
 
-    const formatted = data.map(e => ({
-      id: e._id,
-      code: e.course.courseCode,
-      title: e.course.title,
-      ltp: e.course.ltp,
-      semester: e.semester,
-      session: e.course.session,
-      status: e.status,
-      category: e.category,
-      grade: e.grade,
-      attendance: e.attendance,
-      enrolled: e.status === "ENROLLED"
-    }));
+    const formatted = data
+  .filter(e => e.course) // <-- VERY IMPORTANT
+  .map(e => ({
+    id: e._id,
+    course: e.course._id,
+    code: e.course.courseCode,
+    title: e.course.title,
+    ltp: e.course.ltp,
+    semester: e.semester,
+    session: e.course.session,
+    status: e.status,
+    category: e.category,
+    grade: e.grade,
+    attendance: e.attendance,
+    enrolled: e.status === "ENROLLED"
+  }));
 
     return res.json({ success: true, data: formatted });
 
@@ -189,7 +192,7 @@ export const getEnrolledStudents = async (req, res) => {
       course: req.params.courseId,
       status: "ENROLLED"
     })
-      .populate("student", "name email")
+      .populate("student", "name email department")
       .populate("course", "courseCode title");
 
     return res.json({ success: true, data });

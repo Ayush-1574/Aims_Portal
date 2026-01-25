@@ -19,3 +19,14 @@ export const fetchStudentRecord = async () => {
   // Backend returns { success: true, data: [...] }
   return res.data; 
 };
+// Check if feedback is open
+export const getFeedbackStatus = () =>
+  client.get("/system/feedback-status").then(r => r.data);
+
+// Get active feedback session
+export const getFeedbackSession = () =>
+  client.get("/system/feedback-session").then(r => r.data);
+
+// Submit feedback (anonymous)
+export const submitFeedback = (data) =>
+  client.post("/feedback", data);

@@ -8,6 +8,8 @@ import enrollmentRoutes from "./src/routes/enrollmentRoute.js";
 import adminRoutes from "./src/routes/adminRoute.js";
 import globalDataRoutes from "./src/routes/globalDataRoute.js";
 import cookieParser from "cookie-parser";
+import systemRoutes from "./src/routes/systemRoutes.js";
+import feedbackRoutes from "./src/routes/feedbackRoutes.js";
 
 console.log("BACKEND FILE RUNNING");
 
@@ -20,7 +22,7 @@ app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,   // ✅ REQUIRED for cookies
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE" , "PATCH"],
   })
 );
 
@@ -37,5 +39,7 @@ app.use("/courses", courseRoutes);
 app.use("/enrollment", enrollmentRoutes);
 app.use("/global-data", globalDataRoutes);
 app.use("/admin", adminRoutes);
+app.use("/system", systemRoutes);
+app.use("/feedback", feedbackRoutes);
 
 app.listen(5000, () => console.log("Server running on port 5000"));

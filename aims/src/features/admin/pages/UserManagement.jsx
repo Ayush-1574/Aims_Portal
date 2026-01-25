@@ -1,53 +1,65 @@
 import { useState, useEffect } from "react";
 import { fetchAllUsers, deleteUser, fetchUserDetails, updateUser } from "../api";
-import { Search, Filter, Trash2, Edit2, ChevronLeft, ChevronRight, X, User, Save } from "lucide-react";
+import { Search, Filter, Trash2, Edit2, ChevronLeft, ChevronRight, X, Save, Users, FilterX, ListFilter } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 export default function UserManagement() {
-  // --- STATE ---
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [filters, setFilters] = useState({ search: "", role: "" });
-
-  // Modal State
+  const [filters, setFilters] = useState({ search: "", role: "ALL" });
+  const [appliedFilters, setAppliedFilters] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
 
-  // --- ACTIONS ---
   const loadUsers = async () => {
+    if (!appliedFilters) return;
     setLoading(true);
     try {
-      const res = await fetchAllUsers(filters, page, 8); // Limit 8 items per page
-     
+      const query = { 
+        search: appliedFilters.search, 
+        role: appliedFilters.role === "ALL" ? "" : appliedFilters.role 
+      };
+      const res = await fetchAllUsers(query, page, 8); 
       setUsers(res.users || []);
       setTotalPages(res.pagination?.pages || 1);
     } catch (err) {
-      console.error(err);
+      toast.error("Failed to fetch users");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { loadUsers(); }, [page, filters]);
+  useEffect(() => { loadUsers(); }, [page, appliedFilters]);
+
+  const handleSearch = () => {
+    setAppliedFilters(filters);
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setFilters({ search: "", role: "ALL" });
+    setAppliedFilters(null);
+    setUsers([]);
+    setPage(1);
+  };
 
   const handleEdit = async (user) => {
-    // 1. Open modal with basic info immediately
     setIsModalOpen(true);
     setModalLoading(true);
     setEditingUser(user);
-
     try {
-      // 2. Fetch full details (like entry_no, department)
       const details = await fetchUserDetails(user._id);
       setEditingUser(details);
     } catch (err) {
-      alert("Failed to fetch full user details");
+      toast.error("Failed to fetch user details");
     } finally {
       setModalLoading(false);
     }
@@ -59,9 +71,10 @@ export default function UserManagement() {
     try {
       await updateUser(editingUser._id, editingUser);
       setIsModalOpen(false);
-      loadUsers(); // Refresh table
+      loadUsers(); 
+      toast.success("User updated");
     } catch (err) {
-      alert(err.response?.data?.msg || "Update failed");
+      toast.error(err.response?.data?.msg || "Update failed");
     } finally {
       setModalLoading(false);
     }
@@ -72,21 +85,31 @@ export default function UserManagement() {
     try {
       await deleteUser(id);
       loadUsers();
+      toast.success("User deleted");
     } catch (err) {
-      alert("Delete failed");
+      toast.error("Delete failed");
     }
   };
 
-  // --- RENDER HELPERS ---
-  const getRoleBadgeVariant = (role) => {
-    if (role === 'faculty_advisor') return 'advisor';
-    return role; // 'student', 'instructor', 'admin' match the variants
+  // --- BADGE STYLING HELPER ---
+  const getRoleBadgeStyle = (role) => {
+    switch(role) {
+      case 'student':
+        return "bg-purple-100 text-purple-700 hover:bg-purple-100 border-purple-200";
+      case 'instructor':
+        return "bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200";
+      case 'faculty_advisor':
+        return "bg-pink-100 text-pink-700 hover:bg-pink-100 border-pink-200";
+      case 'admin':
+        return "bg-red-100 text-red-700 hover:bg-red-100 border-red-200";
+      default:
+        return "bg-slate-100 text-slate-700 hover:bg-slate-100 border-slate-200";
+    }
   };
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
       
-      {/* Header & Toolbar */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">User Management</h1>
@@ -94,44 +117,63 @@ export default function UserManagement() {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white/60 backdrop-blur-md p-2 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-3 text-slate-400" size={20} />
-          <input 
-            className="w-full h-11 pl-10 pr-4 rounded-xl bg-transparent hover:bg-white focus:bg-white border-2 border-transparent focus:border-blue-500 outline-none transition-all font-medium"
-            placeholder="Search users..."
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        <div className="relative md:col-span-2">
+          <Search className="absolute left-3 top-3 text-slate-400" size={16} />
+          <Input 
+            className="pl-9 bg-white"
+            placeholder="Search users by name or email..."
             value={filters.search}
-            onChange={(e) => { setFilters(prev => ({ ...prev, search: e.target.value })); setPage(1); }}
+            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
           />
         </div>
-        <div className="relative md:w-64">
-           <Filter className="absolute left-3 top-3 text-slate-400" size={20} />
-           <select 
-             className="w-full h-11 pl-10 pr-4 rounded-xl bg-transparent hover:bg-white focus:bg-white border-2 border-transparent focus:border-blue-500 outline-none font-medium appearance-none cursor-pointer"
-             value={filters.role}
-             onChange={(e) => { setFilters(prev => ({ ...prev, role: e.target.value })); setPage(1); }}
-           >
-             <option value="">All Roles</option>
-             <option value="student">Students</option>
-             <option value="instructor">Instructors</option>
-             <option value="faculty_advisor">Advisors</option>
-             <option value="admin">Admins</option>
-           </select>
+        
+        <Select value={filters.role} onValueChange={(val) => setFilters(prev => ({ ...prev, role: val }))}>
+          <SelectTrigger>
+             <div className="flex items-center gap-2 text-slate-600">
+                <ListFilter size={16} />
+                <SelectValue placeholder="Role" />
+             </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Roles</SelectItem>
+            <SelectItem value="student">Students</SelectItem>
+            <SelectItem value="instructor">Instructors</SelectItem>
+            <SelectItem value="faculty_advisor">Advisors</SelectItem>
+            <SelectItem value="admin">Admins</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="flex items-center gap-2">
+           <Button onClick={handleSearch} className="flex-1 bg-slate-900 hover:bg-slate-800 text-white">
+             Search
+           </Button>
+           <Button variant="ghost" onClick={handleReset} className="text-slate-500 hover:bg-slate-100">
+             <FilterX size={18} />
+           </Button>
         </div>
       </div>
 
-      {/* Main Table */}
       <div className="min-h-[400px]">
-        {loading ? (
-           <div className="flex flex-col items-center justify-center h-64 text-slate-400 animate-pulse">
-             <div className="w-12 h-12 bg-slate-200 rounded-full mb-4"></div>
-             <p>Loading users...</p>
-           </div>
+        {!appliedFilters ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center bg-white/50 rounded-2xl border-2 border-dashed border-slate-200">
+              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 text-blue-400">
+                <Users size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">Search Users</h3>
+              <p className="text-slate-500 max-w-sm mt-2">
+                Enter a name or select a role above and click <b>Search</b> to find users.
+              </p>
+            </div>
+        ) : loading ? (
+            <div className="flex flex-col items-center justify-center h-64 text-slate-400 animate-pulse">
+              <div className="w-12 h-12 bg-slate-200 rounded-full mb-4"></div>
+              <p>Loading users...</p>
+            </div>
         ) : users.length === 0 ? (
-           <div className="text-center py-20 bg-white/40 rounded-3xl border border-dashed border-slate-300">
-             <p className="text-slate-500 font-medium">No users found matching your filters.</p>
-           </div>
+            <div className="text-center py-20 bg-white/40 rounded-3xl border border-dashed border-slate-300">
+              <p className="text-slate-500 font-medium">No users found matching your filters.</p>
+            </div>
         ) : (
           <Table>
             <TableHeader>
@@ -148,7 +190,7 @@ export default function UserManagement() {
                   <TableCell>
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
-                        {user.name?.[0]}
+                        {user.name?.[0]?.toUpperCase()}
                       </div>
                       <div>
                         <p className="font-bold text-slate-900">{user.name}</p>
@@ -157,7 +199,8 @@ export default function UserManagement() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getRoleBadgeVariant(user.role)}>
+                    {/* APPLIED COLOR CLASS HERE */}
+                    <Badge className={getRoleBadgeStyle(user.role)}>
                       {user.role.replace("_", " ")}
                     </Badge>
                   </TableCell>
@@ -183,96 +226,56 @@ export default function UserManagement() {
         )}
       </div>
 
-      {/* Pagination */}
-      {!loading && totalPages > 1 && (
+      {!loading && appliedFilters && totalPages > 1 && (
         <div className="flex justify-between items-center px-4">
-          <Button 
-            variant="outline" 
-            disabled={page === 1} 
-            onClick={() => setPage(p => p - 1)}
-            className="gap-2"
-          >
+          <Button variant="outline" disabled={page === 1} onClick={() => setPage(p => p - 1)} className="gap-2">
             <ChevronLeft size={16}/> Previous
           </Button>
           <span className="text-sm font-bold text-slate-500">Page {page} of {totalPages}</span>
-          <Button 
-            variant="outline" 
-            disabled={page === totalPages} 
-            onClick={() => setPage(p => p + 1)}
-            className="gap-2"
-          >
+          <Button variant="outline" disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="gap-2">
             Next <ChevronRight size={16}/>
           </Button>
         </div>
       )}
 
-      {/* --- EDIT MODAL OVERLAY --- */}
       {isModalOpen && editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
-            
-            {/* Modal Header */}
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h3 className="text-xl font-bold text-slate-800">Edit User</h3>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition">
+              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition outline-none">
                 <X size={20} />
               </button>
             </div>
-
-            {/* Modal Body */}
             <form onSubmit={handleSaveUser} className="p-8 space-y-5">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase">Full Name</label>
-                <Input 
-                  value={editingUser.name} 
-                  onChange={e => setEditingUser({...editingUser, name: e.target.value})} 
-                  required
-                />
+                <Input value={editingUser.name} onChange={e => setEditingUser({...editingUser, name: e.target.value})} required />
               </div>
-
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase">Email</label>
-                <Input 
-                  value={editingUser.email} 
-                  disabled 
-                  className="bg-slate-50 text-slate-500 border-dashed"
-                />
+                <Input value={editingUser.email} disabled className="bg-slate-50 text-slate-500 border-dashed" />
               </div>
-
-              {/* Dynamic Fields based on Role */}
               {editingUser.role === 'student' && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase">Entry No</label>
-                    <Input 
-                      value={editingUser.entry_no || ""} 
-                      onChange={e => setEditingUser({...editingUser, entry_no: e.target.value})} 
-                    />
+                    <Input value={editingUser.entry_no || ""} onChange={e => setEditingUser({...editingUser, entry_no: e.target.value})} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase">Dept</label>
-                    <Input 
-                      value={editingUser.department || ""} 
-                      onChange={e => setEditingUser({...editingUser, department: e.target.value})} 
-                    />
+                    <Input value={editingUser.department || ""} onChange={e => setEditingUser({...editingUser, department: e.target.value})} />
                   </div>
                 </div>
               )}
-
               <div className="pt-4 flex gap-3">
-                <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsModalOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" className="flex-1" isLoading={modalLoading}>
-                  <Save size={18} className="mr-2"/> Save Changes
-                </Button>
+                <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1 bg-slate-900 text-white" isLoading={modalLoading}><Save size={18} className="mr-2"/> Save Changes</Button>
               </div>
             </form>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }

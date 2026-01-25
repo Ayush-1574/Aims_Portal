@@ -27,7 +27,8 @@ export default function StudentRecord() {
         enrollments.forEach(entry => {
           // --- KEY LOGIC: Group by Instructor's Session ---
           // We use the session string directly from the course object.
-          const sessionName = entry.course?.session || "Unknown Session";
+          const sessionName = entry.session || "Unknown Session";
+          console.log("hi i am here " , sessionName)
           
           if (!grouped[sessionName]) {
             grouped[sessionName] = { 
@@ -106,6 +107,7 @@ export default function StudentRecord() {
         ) : (
           Object.keys(record.sessions).sort().reverse().map((session) => {
             const data = record.sessions[session];
+            console.log("data" , data)
             const isOpen = expandedSession === session;
 
             return (
@@ -154,10 +156,10 @@ export default function StudentRecord() {
                         {data.courses.map((c) => (
                           <tr key={c._id} className="hover:bg-blue-50/30 transition-colors">
                             <td className="px-6 py-4 font-mono font-medium text-slate-600">
-                              {c.course?.courseCode}
+                              {c.code}
                             </td>
                             <td className="px-6 py-4 font-medium text-slate-800">
-                              {c.course?.title}
+                              {c.title}
                             </td>
                             <td className="px-6 py-4 text-center text-slate-600">
                               {c.credits}

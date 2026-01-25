@@ -104,3 +104,14 @@ export const deleteGlobalDataEntry = async (type, itemId) => {
   const res = await client.delete(`${API_BASE}/global-data/${type}/${itemId}`);
   return res.data;
 };
+export const setFeedbackStatus = (value) =>
+  client.post("/system/feedback-toggle", { value });
+
+export const setFeedbackSession = (session) =>
+  client.post("/system/feedback-session", { session });
+
+export const getFeedbackStatus = () =>
+  client.get("/system/feedback-status").then(r => r.data);
+
+export const getFeedbackSession = () =>
+  client.get("/system/feedback-session").then(r => r.data);
