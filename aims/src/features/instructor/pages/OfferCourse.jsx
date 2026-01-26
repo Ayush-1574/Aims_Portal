@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+ 
 
 export default function OfferCourse() {
   const [formData, setFormData] = useState({
@@ -29,9 +30,7 @@ export default function OfferCourse() {
         const sessionData = await fetchGlobalData("SESSION");
         const courseData = await fetchGlobalData("COURSE_CODE");
         
-        console.log("Dept Data:", deptData);
-        console.log("Session Data:", sessionData);
-        console.log("Course Data:", courseData);
+       
         
         setDepartments(deptData.items || []);
         setSessions(sessionData.items || []);
