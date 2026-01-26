@@ -1,213 +1,182 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { getInstructorFeedback } from "../api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Star } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BookOpen, Calendar, GraduationCap, Layers, ArrowRight, School, FilterX, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export default function InstructorFeedback() {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // filters
+  
+  // Filters
   const [courseFilter, setCourseFilter] = useState("ALL");
   const [sessionFilter, setSessionFilter] = useState("ALL");
 
-  /* ---------- Load data ---------- */
- const loadData = async () => {
-  try {
-    const res = await getInstructorFeedback();
-    setFeedbacks(Array.isArray(res.data?.data) ? res.data.data : []);
-  } catch {
-    toast.error("Failed to load feedback");
-  } finally {
-    setLoading(false);
-  }
-};
+  const loadData = async () => {
+    try {
+      const res = await getInstructorFeedback();
+      // Ensure we handle the response structure correctly (res.data or res.data.data)
+      const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setFeedbacks(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load feedback");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => { loadData(); }, []);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  /* ---------- Filters ---------- */
+  // --- FILTER & GROUP LOGIC ---
   const filteredFeedbacks = useMemo(() => {
     return feedbacks.filter((f) => {
-      const courseOk =
-        courseFilter === "ALL" || f.course?.courseCode === courseFilter;
-      const sessionOk =
-        sessionFilter === "ALL" || f.session === sessionFilter;
+      const courseOk = courseFilter === "ALL" || f.course?.courseCode === courseFilter;
+      const sessionOk = sessionFilter === "ALL" || f.session === sessionFilter;
       return courseOk && sessionOk;
     });
   }, [feedbacks, courseFilter, sessionFilter]);
 
-  /* ---------- Group by course ---------- */
-  const grouped = useMemo(() => {
+  // Group raw feedback entries by Course ID to create "Course Cards"
+  const groupedCourses = useMemo(() => {
     const map = {};
     filteredFeedbacks.forEach((f) => {
+      // Safety check if course object exists
+      if (!f.course) return;
+      
       const key = f.course._id;
       if (!map[key]) {
-        map[key] = { course: f.course, items: [] };
+        map[key] = { 
+            course: f.course, 
+            session: f.session, 
+            count: 0 
+        };
       }
-      map[key].items.push(f);
+      map[key].count++;
     });
     return Object.values(map);
   }, [filteredFeedbacks]);
 
-  /* ---------- Filter options ---------- */
-  const courseOptions = useMemo(() => {
-    const set = new Set(feedbacks.map((f) => f.course.courseCode));
-    return ["ALL", ...set];
-  }, [feedbacks]);
-
-  const sessionOptions = useMemo(() => {
-    const set = new Set(feedbacks.map((f) => f.session));
-    return ["ALL", ...set];
-  }, [feedbacks]);
+  // Options for dropdowns
+  const courseOptions = useMemo(() => ["ALL", ...new Set(feedbacks.map((f) => f.course?.courseCode).filter(Boolean))], [feedbacks]);
+  const sessionOptions = useMemo(() => ["ALL", ...new Set(feedbacks.map((f) => f.session).filter(Boolean))], [feedbacks]);
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-40 w-full" />
-      </div>
-    );
-  }
-
-  if (feedbacks.length === 0) {
-    return (
-      <div className="py-20 text-center text-gray-500">
-        No feedback received yet.
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+         {[1,2,3].map(i => <Skeleton key={i} className="h-64 w-full rounded-2xl" />)}
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 pb-20 animate-fade-in">
+    <div className="space-y-8 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Course Feedback</h1>
-        <p className="text-gray-500">
-          Anonymous feedback submitted by students
-        </p>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4">
-        <select
-          value={courseFilter}
-          onChange={(e) => setCourseFilter(e.target.value)}
-          className="h-10 rounded-lg border px-3"
-        >
-          {courseOptions.map((c) => (
-            <option key={c} value={c}>
-              {c === "ALL" ? "All Courses" : c}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={sessionFilter}
-          onChange={(e) => setSessionFilter(e.target.value)}
-          className="h-10 rounded-lg border px-3"
-        >
-          {sessionOptions.map((s) => (
-            <option key={s} value={s}>
-              {s === "ALL" ? "All Sessions" : s}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Grouped feedback */}
-      {grouped.length === 0 ? (
-        <div className="text-center text-gray-500 py-10">
-          No feedback matches selected filters.
+      <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Course Feedback</h1>
+          <p className="text-slate-500 mt-1">Select a course to view detailed student feedback.</p>
         </div>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
+        <Select value={courseFilter} onValueChange={setCourseFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+             <div className="flex items-center gap-2 text-slate-600"><BookOpen size={16} /><SelectValue placeholder="Course" /></div>
+          </SelectTrigger>
+          <SelectContent>
+            {courseOptions.map(c => <SelectItem key={c} value={c}>{c === "ALL" ? "All Courses" : c}</SelectItem>)}
+          </SelectContent>
+        </Select>
+
+        <Select value={sessionFilter} onValueChange={setSessionFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+             <div className="flex items-center gap-2 text-slate-600"><Calendar size={16} /><SelectValue placeholder="Session" /></div>
+          </SelectTrigger>
+          <SelectContent>
+            {sessionOptions.map(s => <SelectItem key={s} value={s}>{s === "ALL" ? "All Sessions" : s}</SelectItem>)}
+          </SelectContent>
+        </Select>
+
+        {(courseFilter !== "ALL" || sessionFilter !== "ALL") && (
+          <Button variant="ghost" onClick={() => { setCourseFilter("ALL"); setSessionFilter("ALL"); }} className="text-slate-500 ml-auto">
+            <FilterX size={16} className="mr-2"/> Reset
+          </Button>
+        )}
+      </div>
+
+      {/* Course Cards Grid */}
+      {groupedCourses.length === 0 ? (
+         <div className="py-20 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+            <MessageSquare size={48} className="mx-auto text-slate-300 mb-4"/>
+            <p className="text-slate-500 font-medium">No feedback records found.</p>
+         </div>
       ) : (
-        grouped.map(({ course, items }) => {
-          const avg = (field) =>
-            (
-              items.reduce((s, f) => s + (f[field] || 0), 0) / items.length
-            ).toFixed(1);
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {groupedCourses.map(({ course, session, count }) => (
+            <Card key={course._id} className="group flex flex-col h-full bg-white border border-slate-200 hover:shadow-xl hover:border-blue-200 transition-all duration-300 overflow-hidden relative">
+               
+               {/* Status Line */}
+               <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500" />
 
-          return (
-            <Card key={course._id} className="shadow-sm">
-              <CardContent className="p-6 space-y-6">
-                {/* Header */}
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-xl font-bold">{course.title}</h2>
-                    <p className="text-sm text-gray-500">
-                      {course.courseCode} • {course.session}
-                    </p>
-                  </div>
-                  <Badge variant="secondary">
-                    {items.length} responses
-                  </Badge>
-                </div>
+               <CardContent className="p-6 pl-7 flex flex-col h-full">
+                 <div className="flex justify-between items-start mb-3">
+                    <Badge variant="outline" className="font-mono font-bold text-slate-700 bg-slate-50 border-slate-200">
+                      {course.courseCode}
+                    </Badge>
+                    <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100">
+                      {count} Responses
+                    </Badge>
+                 </div>
 
-                {/* Averages */}
-                <div className="space-y-4">
-                  <RatingBar label="Overall Rating" value={avg("rating")} />
-                  <RatingBar
-                    label="Teaching Quality"
-                    value={avg("teachingQuality")}
-                  />
-                  <RatingBar label="Workload" value={avg("workload")} />
-                </div>
+                 <h3 className="text-xl font-bold text-slate-900 mb-4 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
+                   {course.title}
+                 </h3>
 
-                {/* Comments */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold">Student Comments</h3>
-                  {items.filter((i) => i.comments?.trim()).length === 0 ? (
-                    <p className="text-sm text-gray-500">
-                      No comments provided.
-                    </p>
-                  ) : (
-                    items
-                      .filter((i) => i.comments?.trim())
-                      .map((f, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-slate-50 p-3 rounded-lg text-sm"
-                        >
-                          “{f.comments}”
-                        </div>
-                      ))
-                  )}
-                </div>
-              </CardContent>
+                 {/* Info Grid */}
+                 <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs text-slate-600 bg-slate-50/50 p-3 rounded-xl border border-slate-100 mb-6">
+                    <div className="flex items-center gap-2">
+                        <School size={14} className="text-blue-500 shrink-0"/>
+                        <span className="font-semibold truncate">{course.dept || "General"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <GraduationCap size={14} className="text-purple-500 shrink-0"/>
+                        <span>Year {course.year}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Calendar size={14} className="text-orange-500 shrink-0"/>
+                        <span>{session}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Layers size={14} className="text-indigo-500 shrink-0"/>
+                        <span className="font-mono">{course.ltp}</span>
+                    </div>
+                 </div>
+
+                 {/* Action Button */}
+                 <div className="mt-auto pt-4 border-t border-slate-50">
+                    {/* LINK TO THE NEW PAGE */}
+                    <Link to={`/instructor/feedback/${course._id}`}>
+                        <Button variant="outline" className="w-full justify-between group-hover:border-blue-500 group-hover:text-blue-600 transition-all">
+                           <span className="flex items-center gap-2">
+                               <MessageSquare size={16} /> View Feedback
+                           </span>
+                           <ArrowRight size={16} />
+                        </Button>
+                    </Link>
+                 </div>
+               </CardContent>
             </Card>
-          );
-        })
-      )}
-    </div>
-  );
-}
-
-/* ---------- Rating Bar ---------- */
-function RatingBar({ label, value }) {
-  const percent = Math.min((value / 5) * 100, 100);
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-sm font-medium">{label}</span>
-        <div className="flex items-center gap-1 text-sm">
-          <Star size={14} className="text-yellow-500" />
-          <span className="font-bold">{value}</span>
-          <span className="text-gray-500">/5</span>
+          ))}
         </div>
-      </div>
-
-      <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-yellow-400 transition-all"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
+      )}
     </div>
   );
 }

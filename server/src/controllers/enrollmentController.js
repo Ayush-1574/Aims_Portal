@@ -39,8 +39,8 @@ if (existing) {
   }
 
 }
+  const batch = student.entry_no.substring(0, 4);
 
-  const batch = student.entryNumber.substring(0, 4);
     // Fetch course to get session
     const course = await Course.findById(courseId);
     if (!course) {
