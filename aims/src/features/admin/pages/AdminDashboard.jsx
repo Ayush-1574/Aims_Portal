@@ -21,8 +21,6 @@ export default function AdminDashboard() {
         <Route path="create-user" element={<CreateUser />} />
         <Route path="course-approvals" element={<PendingCourseApprovals />} />
         <Route path="global-data" element={<GlobalDataManagement />} />
-
-        {/* ✅ NEW: Feedback Settings */}
         <Route path="feedback-settings" element={<AdminFeedbackSettings />} />
         
         {/* Fallback */}

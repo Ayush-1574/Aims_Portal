@@ -38,7 +38,7 @@ if (existing) {
     });
   }
 }
-
+  const batch = student.entry_no.substring(0, 4);
 
     // Fetch course to get session
     const course = await Course.findById(courseId);
@@ -50,7 +50,7 @@ if (existing) {
     const advisor = await User.findOne({
       role: "faculty_advisor",
       advisor_department: student.department,
-      advisor_year: student.year
+      advisor_batch: batch
     });
 
     const record = await Enrollment.create({

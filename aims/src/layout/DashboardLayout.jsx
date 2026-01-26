@@ -1,9 +1,10 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/core/context/AuthContext";
 import { 
   Menu, LogOut, LayoutDashboard, BookOpen, 
-  Users, FileText, CheckSquare, Activity, UserPlus
+  Users, FileText, CheckSquare, Activity, UserPlus,
+  FileCheck, MessageSquare // <-- ADDED NEW ICONS HERE
 } from "lucide-react";
 import UserPill from "@/components/ui/UserPill";
 import { getFeedbackStatus } from "@/features/admin/api";
@@ -20,6 +21,7 @@ export default function DashboardLayout({ role, children }) {
     logout();
     navigate("/login");
   };
+  
   useEffect(() => {
     if (role === "student") {
       getFeedbackStatus()
@@ -58,7 +60,6 @@ export default function DashboardLayout({ role, children }) {
 
       case "faculty_advisor":
         return [
-          // { icon: CheckSquare, label: "Course Approvals", path: "/advisor/courses" },
           { icon: Users, label: "Student Enrollments", path: "/advisor/enrollments" },
           { icon: Activity, label: "System Status", path: "/advisor/status" },
         ];
@@ -68,8 +69,10 @@ export default function DashboardLayout({ role, children }) {
           { icon: LayoutDashboard, label: "Overview", path: "/admin/overview" },
           { icon: Users, label: "User Management", path: "/admin/users" },
           { icon: UserPlus, label: "Create User", path: "/admin/create-user" },
-          { icon: CheckSquare, label: "Course Approvals", path: "/admin/course-approvals" },
-          { icon: CheckSquare, label: "Feedback Settings", path: "/admin/feedback-settings" },
+          // CHANGED: Use FileCheck for approvals
+          { icon: FileCheck, label: "Course Approvals", path: "/admin/course-approvals" }, 
+          // CHANGED: Use MessageSquare for feedback settings
+          { icon: MessageSquare, label: "Feedback Settings", path: "/admin/feedback-settings" }, 
         ];
 
       default:
@@ -131,10 +134,6 @@ export default function DashboardLayout({ role, children }) {
               <Link 
                 key={link.path} 
                 to={link.path}
-                // FIXED: 
-                // 1. Added 'border' base class so sizing is consistent
-                // 2. Added 'focus:ring-0' to kill any browser focus rings
-                // 3. Inactive state now has 'border-transparent' instead of no border
                 className={`
                   flex items-center rounded-xl relative group outline-none focus:outline-none focus:ring-0 border
                   transition-all duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1.0)]

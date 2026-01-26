@@ -4,135 +4,141 @@ import {
   submitFeedback,
   getFeedbackStatus
 } from "../api";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Star, MessageSquare, BookOpen, GraduationCap, BarChart } from "lucide-react";
+import { Star, MessageSquare, BookOpen, Send, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// --- SUB-COMPONENT: Individual Feedback Card ---
+// --- CUSTOM STAR RATING COMPONENT ---
+function StarRating({ value, onChange, max = 5 }) {
+  const [hover, setHover] = useState(0);
+
+  return (
+    <div className="flex items-center gap-1.5" onMouseLeave={() => setHover(0)}>
+      {[...Array(max)].map((_, i) => {
+        const ratingValue = i + 1;
+        const isFilled = ratingValue <= (hover || value);
+        
+        return (
+          <button
+            key={i}
+            type="button"
+            className="focus:outline-none transition-all duration-200 hover:scale-110 active:scale-90"
+            onClick={() => onChange(ratingValue)}
+            onMouseEnter={() => setHover(ratingValue)}
+          >
+            <Star
+              size={26}
+              className={`${
+                isFilled
+                  ? "fill-amber-400 text-amber-400 drop-shadow-sm"
+                  : "fill-slate-50 text-slate-200"
+              } transition-colors duration-200`}
+              strokeWidth={isFilled ? 0 : 2}
+            />
+          </button>
+        );
+      })}
+      <span className="ml-2 text-sm font-bold text-slate-400 w-6">
+        {hover || value || 0}
+        <span className="text-[10px] font-normal text-slate-300">/5</span>
+      </span>
+    </div>
+  );
+}
+
+// --- FEEDBACK CARD ---
 function FeedbackCard({ course, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    rating: 5,
-    teachingQuality: 5,
-    workload: 3,
+    rating: 0,
+    teachingQuality: 0,
+    workload: 0,
     comments: ""
   });
 
-  // Calculate dynamic average for display
-  const averageRating = ((Number(form.rating) + Number(form.teachingQuality) + Number(form.workload)) / 3).toFixed(1);
-
-  // Helper for Rating Buttons
-  const RatingInput = ({ label, value, field, max = 5, icon: Icon }) => (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <Label className="text-xs sm:text-sm font-medium text-slate-700 flex items-center gap-2">
-          {Icon && <Icon size={14} className="text-slate-400 shrink-0" />} 
-          <span className="truncate">{label}</span>
-        </Label>
-        <span className="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded shrink-0">
-          {value}/{max}
-        </span>
-      </div>
-      <div className="flex gap-1 sm:gap-2">
-        {[...Array(max)].map((_, i) => {
-          const ratingValue = i + 1;
-          const isActive = ratingValue <= value;
-          return (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setForm({ ...form, [field]: ratingValue })}
-              // Larger touch target (h-10) on mobile, standard (h-9) on desktop
-              className={`flex-1 h-10 sm:h-9 rounded-md transition-all duration-200 border text-sm font-medium touch-manipulation ${
-                isActive 
-                  ? "bg-slate-900 border-slate-900 text-white shadow-sm" 
-                  : "bg-white border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600"
-              }`}
-            >
-              {ratingValue}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-
   const handleSubmit = async () => {
+    if (form.rating === 0 || form.teachingQuality === 0 || form.workload === 0) {
+      toast.error("Please provide a rating for all categories.");
+      return;
+    }
     if (!form.comments.trim()) {
-      toast.error("Please provide written feedback before submitting.");
+      toast.error("Please provide written feedback.");
       return;
     }
 
     setLoading(true);
     await onSubmit(course.courseId, form);
     setLoading(false);
-    
-    // Reset defaults for next time (optional)
-    setForm({ rating: 5, teachingQuality: 5, workload: 3, comments: "" });
+    setForm({ rating: 0, teachingQuality: 0, workload: 0, comments: "" });
   };
 
   return (
-    <Card className="flex flex-col h-full border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
-      {/* Header */}
-      <CardHeader className="pb-4 bg-slate-50/50 border-b border-slate-100 p-4 sm:p-6">
-        <div className="flex justify-between items-start gap-3">
-          <div className="min-w-0"> {/* Enables text truncation in flex item */}
-            <CardTitle className="text-base sm:text-lg font-bold text-slate-900 line-clamp-1" title={course.title}>
-              {course.title}
-            </CardTitle>
-            <div className="flex flex-wrap items-center gap-2 mt-1.5">
-              <Badge variant="outline" className="font-mono text-[10px] sm:text-xs bg-white text-slate-600 border-slate-200 shrink-0">
-                {course.code}
-              </Badge>
-              <span className="text-[10px] sm:text-xs text-slate-400 font-medium px-1.5 py-0.5 rounded bg-slate-100 truncate">
-                {course.session}
-              </span>
-            </div>
-          </div>
-          
-          {/* Average Score Badge */}
-          <div className="flex flex-col items-center justify-center bg-white border border-slate-200 rounded-lg p-1.5 sm:p-2 min-w-[3rem] sm:min-w-[3.5rem] shadow-sm shrink-0">
-            <span className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{averageRating}</span>
-            <span className="text-[8px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5">Avg</span>
-          </div>
-        </div>
-      </CardHeader>
+    <Card className="flex flex-col h-full bg-white border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 rounded-xl overflow-hidden group">
       
-      {/* Body */}
-      <CardContent className="flex-1 p-4 sm:p-6 space-y-6">
+      {/* Header */}
+      <div className="p-5 border-b border-slate-50 bg-slate-50/30">
+        <div className="flex justify-between items-start mb-2">
+           <Badge variant="outline" className="bg-white text-slate-600 border-slate-200 font-mono text-xs shadow-sm">
+              {course.code}
+           </Badge>
+           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-full">
+              {course.session}
+           </span>
+        </div>
+        <h3 className="text-lg font-bold text-slate-800 leading-tight line-clamp-1" title={course.title}>
+          {course.title}
+        </h3>
+        <p className="text-xs text-slate-500 mt-1 font-medium">{course.dept} Department</p>
+      </div>
+      
+      {/* Form Body */}
+      <CardContent className="flex-1 p-5 space-y-6">
+        
+        {/* Rating Section */}
         <div className="space-y-5">
-          <RatingInput label="Satisfaction" value={form.rating} field="rating" icon={Star} />
-          <RatingInput label="Teaching" value={form.teachingQuality} field="teachingQuality" icon={GraduationCap} />
-          <RatingInput label="Workload" value={form.workload} field="workload" icon={BarChart} />
+          <div className="space-y-2">
+            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Overall Satisfaction</Label>
+            <StarRating value={form.rating} onChange={(v) => setForm({...form, rating: v})} />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Teaching Quality</Label>
+            <StarRating value={form.teachingQuality} onChange={(v) => setForm({...form, teachingQuality: v})} />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Workload Balance</Label>
+            <StarRating value={form.workload} onChange={(v) => setForm({...form, workload: v})} />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs sm:text-sm font-medium text-slate-700 flex items-center gap-2">
-            <MessageSquare size={14} className="text-slate-400" /> 
-            Written Feedback <span className="text-red-500">*</span>
+        {/* Comments Section */}
+        <div className="space-y-2 pt-2 border-t border-slate-50">
+          <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+            <MessageSquare size={12} /> Your Comments <span className="text-red-400">*</span>
           </Label>
           <Textarea
-            rows={4}
+            rows={3}
             value={form.comments}
             onChange={(e) => setForm({ ...form, comments: e.target.value })}
-            placeholder="What worked well? What could be improved?"
-            className="resize-none bg-slate-50 border-slate-200 focus:bg-white transition-colors text-sm sm:text-base"
+            placeholder="Share your experience (anonymous)..."
+            className="resize-none text-sm bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-slate-400 rounded-lg"
           />
         </div>
       </CardContent>
 
-      <CardFooter className="pt-2 pb-4 px-4 sm:pb-6 sm:px-6">
+      <CardFooter className="p-4 bg-slate-50 border-t border-slate-100">
         <Button 
-          className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium h-10 sm:h-11 text-sm sm:text-base shadow-sm active:scale-[0.98] transition-transform" 
+          className="w-full bg-slate-900 hover:bg-blue-600 text-white font-medium shadow-sm transition-all h-10 gap-2 rounded-lg" 
           onClick={handleSubmit} 
           isLoading={loading}
         >
-          Submit Anonymous Feedback
+          <Send size={16} /> Submit Feedback
         </Button>
       </CardFooter>
     </Card>
@@ -169,9 +175,9 @@ export default function StudentFeedback() {
   const handleFeedbackSubmit = async (courseId, formData) => {
     try {
       await submitFeedback({ courseId, ...formData });
-      toast.success("Feedback submitted anonymously");
+      toast.success("Feedback submitted successfully");
     } catch (err) {
-      toast.error(err.response?.data?.msg || "Feedback submission failed");
+      toast.error(err.response?.data?.msg || "Submission failed");
     }
   };
 
@@ -180,11 +186,11 @@ export default function StudentFeedback() {
     e.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Loading Skeleton
+  // Loading State
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-20 animate-pulse px-4 sm:px-0">
-        {[1, 2, 3].map(i => <Skeleton key={i} className="h-[500px] w-full rounded-2xl" />)}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+        {[1, 2, 3].map(i => <Skeleton key={i} className="h-[550px] w-full rounded-2xl" />)}
       </div>
     );
   }
@@ -193,51 +199,50 @@ export default function StudentFeedback() {
   if (!active) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-in fade-in zoom-in-95 duration-500">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
-          <BookOpen size={32} className="text-slate-300 sm:w-10 sm:h-10" />
+        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+          <BookOpen size={40} className="text-slate-300" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Feedback Closed</h2>
-        <p className="text-sm sm:text-base text-slate-500 max-w-md mt-2 leading-relaxed">
-          The course feedback period is currently not active. Please check back later or contact the administration.
+        <h2 className="text-2xl font-bold text-slate-900">Feedback Closed</h2>
+        <p className="text-slate-500 max-w-md mt-2">
+          The course feedback portal is currently closed. Please check back later.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-8 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
-      {/* Header Area */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 sm:gap-6">
-        <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Course Feedback</h1>
-          <p className="text-sm sm:text-base text-slate-500 max-w-2xl leading-relaxed">
-            Share your honest feedback. 
-            <span className="font-semibold text-slate-700"> Responses are 100% anonymous</span> and visible only after grades are finalized.
-          </p>
+      {/* Header & Search */}
+      <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Course Feedback</h1>
+          <p className="text-slate-500 mt-1">Provide anonymous feedback for your enrolled courses.</p>
         </div>
         
-        {/* Search Input */}
-        <div className="w-full md:w-72 relative">
+        <div className="w-full md:w-80 relative group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
           <input
             type="text"
-            placeholder="Search courses..."
+            placeholder="Search by course code or title..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-10 sm:h-11 pl-4 pr-10 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-sm shadow-sm"
+            className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm shadow-sm placeholder:text-slate-400"
           />
-          <SearchIcon className="absolute right-3 top-2.5 sm:top-3 text-slate-400 pointer-events-none" size={18} />
         </div>
       </div>
 
-      {/* Grid Layout - Responsive Breakpoints */}
+      {/* Grid Layout */}
       {filteredEnrollments.length === 0 ? (
-        <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-8 sm:p-12 text-center">
-          <p className="text-slate-500 font-medium text-sm sm:text-base">No pending feedback found for your enrolled courses.</p>
-          <Button variant="link" onClick={() => setSearch("")} className="mt-2 text-slate-900">Clear Search</Button>
+        <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
+          <div className="mx-auto w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mb-4">
+             <Search size={24} className="text-slate-400"/>
+          </div>
+          <p className="text-slate-600 font-medium">No courses found matching your search.</p>
+          <Button variant="link" onClick={() => setSearch("")} className="mt-2 text-blue-600">Clear filters</Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEnrollments.map((course) => (
             <FeedbackCard 
               key={course.courseId} 
@@ -249,24 +254,4 @@ export default function StudentFeedback() {
       )}
     </div>
   );
-}
-
-function SearchIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  )
 }

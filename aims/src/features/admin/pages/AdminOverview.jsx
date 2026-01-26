@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { fetchDashboardStats, fetchGlobalData } from "../api";
 import { 
   Users, BookOpen, Shield, Server, Activity, 
-  Plus, FileText, Settings, Bell, Search, 
-  ArrowUpRight, Clock, CheckCircle, AlertCircle 
+  Plus, MessageSquare, Settings, Search, 
+  ArrowUpRight, CheckCircle 
 } from "lucide-react";
 import UserDetailsCard from "@/components/UserDetailsCard";
 import { Link } from "react-router-dom";
@@ -17,14 +17,6 @@ export default function AdminOverview() {
   const [sessions, setSessions] = useState([]);
   const [courses, setCourses] = useState([]);
 
-  // Mock Activity Data (Placeholder for real logs)
-  const recentActivity = [
-    { id: 1, action: "New User Registration", user: "Rahul Verma (Student)", time: "2 mins ago", type: "success" },
-    { id: 2, action: "Course Created", user: "Dr. Anita Singh", time: "15 mins ago", type: "info" },
-    { id: 3, action: "System Update", user: "System", time: "1 hour ago", type: "warning" },
-    { id: 4, action: "Enrollment Rejected", user: "Advisor Dashboard", time: "3 hours ago", type: "error" },
-  ];
-
   useEffect(() => {
     const loadStats = async () => {
       try {
@@ -35,9 +27,7 @@ export default function AdminOverview() {
         const deptData = await fetchGlobalData("DEPARTMENT");
         const sessionData = await fetchGlobalData("SESSION");
         const courseData = await fetchGlobalData("COURSE_CODE");
-        console.log("Admin Overview - Depts:", deptData);
-        console.log("Admin Overview - Sessions:", sessionData);
-        console.log("Admin Overview - Courses:", courseData);
+        
         setDepartments(deptData.items || []);
         setSessions(sessionData.items || []);
         setCourses(courseData.items || []);
@@ -89,9 +79,6 @@ export default function AdminOverview() {
           <p className="text-slate-500 mt-1">System overview, user metrics, and health status.</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="gap-2">
-            <Bell size={18} /> <span className="hidden sm:inline">Notifications</span>
-          </Button>
           <Link to="/admin/create-user">
             <Button className="gap-2 bg-slate-900 hover:bg-slate-800 text-white shadow-lg">
               <Plus size={18} /> Add New User
@@ -106,11 +93,11 @@ export default function AdminOverview() {
       {/* 3. Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title="Total Users" 
-          value={stats?.totalUsers || 0} 
+          title="Total Students" 
+          value={stats?.usersByRole?.student || 0} 
           icon={Users} 
           color="bg-blue-500"
-          trend={5}
+          trend={0} 
         />
         <StatCard 
           title="Active Instructors" 
@@ -131,49 +118,20 @@ export default function AdminOverview() {
           value="Online" 
           icon={Activity} 
           color="bg-emerald-500"
-          trend={99}
+          trend={0} 
         />
       </div>
 
-      {/* 4. Split View: Activity & Quick Actions */}
+      {/* 4. Split View: Global Data & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Left Column: Recent Activity Log */}
+        {/* Left Column: Global Data Summary */}
         <div className="lg:col-span-2 space-y-6">
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <Clock size={20} className="text-slate-400"/> Recent Activity
+             Global Data Overview
           </h2>
           
-          <Card className="border-slate-200 bg-white">
-            <CardContent className="p-0">
-              <div className="divide-y divide-slate-100">
-                {recentActivity.map((log) => (
-                  <div key={log.id} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-2 h-2 rounded-full ${
-                        log.type === 'success' ? 'bg-emerald-500' : 
-                        log.type === 'warning' ? 'bg-amber-500' : 
-                        log.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                      }`} />
-                      <div>
-                        <p className="font-bold text-slate-800 text-sm">{log.action}</p>
-                        <p className="text-xs text-slate-500">{log.user}</p>
-                      </div>
-                    </div>
-                    <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-1 rounded-md">
-                      {log.time}
-                    </span>
-                  </div>
-                ))}
-                <div className="p-4 text-center border-t border-slate-50">
-                  <button className="text-sm font-bold text-blue-600 hover:text-blue-700">View All Logs</button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Global Data Summary */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="border-slate-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-bold text-slate-700">Active Departments</CardTitle>
@@ -273,16 +231,16 @@ export default function AdminOverview() {
               </Card>
             </Link>
 
-            <div className="block">
+            <Link to="/admin/feedback-settings" className="block">
               <Card className="hover:border-blue-300 hover:shadow-md transition-all cursor-pointer h-full">
                 <CardContent className="p-5 flex flex-col items-center justify-center text-center gap-3">
-                  <div className="p-3 bg-orange-50 text-orange-600 rounded-full">
-                    <FileText size={20} />
+                  <div className="p-3 bg-pink-50 text-pink-600 rounded-full">
+                    <MessageSquare size={20} />
                   </div>
-                  <span className="text-sm font-bold text-slate-700">System Logs</span>
+                  <span className="text-sm font-bold text-slate-700">Feedback Settings</span>
                 </CardContent>
               </Card>
-            </div>
+            </Link>
           </div>
 
           {/* Database Health Widget */}

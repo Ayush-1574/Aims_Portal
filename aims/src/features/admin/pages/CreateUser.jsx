@@ -9,10 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 
 export default function CreateUser({ onUserCreated, onCancel }) {
+  // 1. Cleaned State: Removed advisor_year
   const [formData, setFormData] = useState({
-    name: "", email: "", role: "student", entry_no: "",
-    department: "", year: "", semester: "", advisor_department: "", advisor_year: ""
+    name: "", 
+    email: "", 
+    role: "student", 
+    entry_no: "",
+    department: "", 
+    year: "", 
+    semester: "", 
+    advisor_department: "", 
+    advisor_batch: "" // ✅ Only Batch needed for advisors
   });
+
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", msg: "" });
@@ -22,7 +31,9 @@ export default function CreateUser({ onUserCreated, onCancel }) {
     const loadDepartments = async () => {
       try {
         const data = await fetchGlobalData("DEPARTMENT");
-        setDepartments(data.items.filter(d => d.isActive) || []);
+        // Handle array directly or wrapped in items
+        const items = Array.isArray(data) ? data : (data.items || []);
+        setDepartments(items.filter(d => d.isActive));
       } catch (err) {
         console.error("Error loading departments:", err);
         toast.error("Failed to load departments");
@@ -32,9 +43,11 @@ export default function CreateUser({ onUserCreated, onCancel }) {
   }, []);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  
   const handleSelectChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
   };
+  
   const handleRoleSelect = (role) => setFormData({ ...formData, role });
 
   const handleSubmit = async (e) => {
@@ -47,10 +60,14 @@ export default function CreateUser({ onUserCreated, onCancel }) {
       if (result.success) {
         toast.success(`User "${formData.name}" created successfully!`);
         setStatus({ type: "success", msg: "User created successfully!" });
+        
+        // 2. Reset form (Cleaned up)
         setFormData({
           name: "", email: "", role: "student", entry_no: "",
-          department: "", year: "", semester: "", advisor_department: "", advisor_year: ""
+          department: "", year: "", semester: "", 
+          advisor_department: "", advisor_batch: ""
         });
+        
         if (onUserCreated) onUserCreated();
       }
     } catch (err) {
@@ -73,7 +90,7 @@ export default function CreateUser({ onUserCreated, onCancel }) {
     <div className="max-w-4xl mx-auto animate-fade-in pb-10">
       <Card className="overflow-hidden border-0 shadow-xl rounded-2xl">
         
-        {/* HEADER: Matches Offer Course Style (Dark Slate) */}
+        {/* HEADER */}
         <div className="bg-slate-900 p-8 text-white">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md border border-white/10">
@@ -130,6 +147,7 @@ export default function CreateUser({ onUserCreated, onCancel }) {
               </div>
             </div>
 
+            {/* Student Fields */}
             {formData.role === "student" && (
               <div className="p-6 bg-purple-50/50 rounded-2xl border border-purple-100 animate-slide-up space-y-4">
                   <div className="flex items-center gap-2 text-purple-800 font-bold mb-2">
@@ -148,8 +166,8 @@ export default function CreateUser({ onUserCreated, onCancel }) {
                           </SelectTrigger>
                           <SelectContent>
                              {departments.map(dept => (
-                               <SelectItem key={dept._id} value={dept.value}>
-                                 {dept.value}
+                               <SelectItem key={dept._id || dept.key} value={dept.value || dept.key}>
+                                 {dept.value || dept.key}
                                </SelectItem>
                              ))}
                           </SelectContent>
@@ -167,6 +185,7 @@ export default function CreateUser({ onUserCreated, onCancel }) {
               </div>
             )}
 
+            {/* Faculty Advisor Fields */}
             {formData.role === "faculty_advisor" && (
               <div className="p-6 bg-pink-50/50 rounded-2xl border border-pink-100 animate-slide-up space-y-4">
                   <div className="flex items-center gap-2 text-pink-800 font-bold mb-2">
@@ -181,16 +200,24 @@ export default function CreateUser({ onUserCreated, onCancel }) {
                           </SelectTrigger>
                           <SelectContent>
                              {departments.map(dept => (
-                               <SelectItem key={dept._id} value={dept.value}>
-                                 {dept.value}
+                               <SelectItem key={dept._id || dept.key} value={dept.value || dept.key}>
+                                 {dept.value || dept.key}
                                </SelectItem>
                              ))}
                           </SelectContent>
                         </Select>
                     </div>
+                    {/* ✅ ONLY BATCH (Year Removed) */}
                     <div className="space-y-2">
-                        <Label>Year</Label>
-                        <Input type="number" name="advisor_year" value={formData.advisor_year} onChange={handleChange} placeholder="1" required />
+                        <Label>Batch</Label>
+                        <Input 
+                          type="text" 
+                          name="advisor_batch" 
+                          value={formData.advisor_batch} 
+                          onChange={handleChange} 
+                          placeholder="e.g. 2021-2025" 
+                          required 
+                        />
                     </div>
                   </div>
               </div>
