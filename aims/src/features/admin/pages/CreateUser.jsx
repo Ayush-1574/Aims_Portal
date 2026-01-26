@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createNewUser } from "../api";
+import { useState, useEffect } from "react";
+import { createNewUser, fetchGlobalData } from "../api";
 import { UserPlus, CheckCircle, AlertCircle, GraduationCap, BookOpen, School, Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,8 +13,23 @@ export default function CreateUser({ onUserCreated, onCancel }) {
     name: "", email: "", role: "student", entry_no: "",
     department: "", year: "", semester: "", advisor_department: "", advisor_year: ""
   });
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", msg: "" });
+
+  // Fetch departments from global data
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const data = await fetchGlobalData("DEPARTMENT");
+        setDepartments(data.items.filter(d => d.isActive) || []);
+      } catch (err) {
+        console.error("Error loading departments:", err);
+        toast.error("Failed to load departments");
+      }
+    };
+    loadDepartments();
+  }, []);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleSelectChange = (name, value) => {
@@ -132,9 +147,11 @@ export default function CreateUser({ onUserCreated, onCancel }) {
                              <SelectValue placeholder="Select Dept" />
                           </SelectTrigger>
                           <SelectContent>
-                             <SelectItem value="CSE">CSE</SelectItem>
-                             <SelectItem value="EE">EE</SelectItem>
-                             <SelectItem value="ME">ME</SelectItem>
+                             {departments.map(dept => (
+                               <SelectItem key={dept._id} value={dept.value}>
+                                 {dept.value}
+                               </SelectItem>
+                             ))}
                           </SelectContent>
                         </Select>
                     </div>
@@ -163,15 +180,17 @@ export default function CreateUser({ onUserCreated, onCancel }) {
                              <SelectValue placeholder="Select Dept" />
                           </SelectTrigger>
                           <SelectContent>
-                             <SelectItem value="CSE">CSE</SelectItem>
-                             <SelectItem value="EE">EE</SelectItem>
-                             <SelectItem value="ME">ME</SelectItem>
+                             {departments.map(dept => (
+                               <SelectItem key={dept._id} value={dept.value}>
+                                 {dept.value}
+                               </SelectItem>
+                             ))}
                           </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
                         <Label>Year</Label>
-                        <Input type="number" name="year" value={formData.year} onChange={handleChange} placeholder="1" required />
+                        <Input type="number" name="advisor_year" value={formData.advisor_year} onChange={handleChange} placeholder="1" required />
                     </div>
                   </div>
               </div>
