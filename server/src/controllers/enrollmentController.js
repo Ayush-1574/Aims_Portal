@@ -45,12 +45,12 @@ if (existing) {
     if (!course) {
       return res.status(404).json({ success: false, msg: "Course not found" });
     }
-
+    const batch = student.entryNumber.substring(0, 4);
     // Find faculty advisor with matching department and year
     const advisor = await User.findOne({
       role: "faculty_advisor",
       advisor_department: student.department,
-      advisor_year: student.year
+      advisor_batch : batch
     });
 
     const record = await Enrollment.create({

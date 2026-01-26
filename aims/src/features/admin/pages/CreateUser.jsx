@@ -11,7 +11,7 @@ import { toast } from "sonner";
 export default function CreateUser({ onUserCreated, onCancel }) {
   const [formData, setFormData] = useState({
     name: "", email: "", role: "student", entry_no: "",
-    department: "", year: "", semester: "", advisor_department: "", advisor_year: ""
+    department: "", year: "", semester: "", advisor_department: "", advisor_year: "", advisor_batch: "",
   });
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -49,7 +49,7 @@ export default function CreateUser({ onUserCreated, onCancel }) {
         setStatus({ type: "success", msg: "User created successfully!" });
         setFormData({
           name: "", email: "", role: "student", entry_no: "",
-          department: "", year: "", semester: "", advisor_department: "", advisor_year: ""
+          department: "", year: "", semester: "", advisor_department: "", advisor_year: "", advisor_batch: "",
         });
         if (onUserCreated) onUserCreated();
       }
@@ -189,8 +189,15 @@ export default function CreateUser({ onUserCreated, onCancel }) {
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <Label>Year</Label>
-                        <Input type="number" name="advisor_year" value={formData.advisor_year} onChange={handleChange} placeholder="1" required />
+                        <Label>Batch</Label>
+                        <Input 
+                          type="text" 
+                          name="advisor_batch" 
+                          value={formData.advisor_batch} 
+                          onChange={handleChange} 
+                          placeholder="e.g. 2021-2025" 
+                          required 
+                        />
                     </div>
                   </div>
               </div>

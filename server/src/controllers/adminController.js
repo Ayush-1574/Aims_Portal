@@ -110,7 +110,7 @@ export const getUserDetails = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, entry_no, department, year, semester, advisor_department, advisor_year } = req.body;
+    const { name, entry_no, department, year, semester, advisor_department, advisor_year , advisor_batch } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -125,6 +125,7 @@ export const updateUser = async (req, res) => {
     if (semester !== undefined) user.semester = semester;
     if (advisor_department !== undefined) user.advisor_department = advisor_department;
     if (advisor_year !== undefined) user.advisor_year = advisor_year;
+    if (advisor_batch !== undefined) user.advisor_batch = advisor_batch;
 
     user.updatedAt = new Date();
     await user.save();
@@ -213,9 +214,10 @@ export const createUser = async (req, res) => {
       year,
       semester,
       advisor_department,
-      advisor_year
+      
+      advisor_batch,
     } = req.body;
-
+    const advisor_year = 3
     // Validate required fields
     if (!name || !email || !role) {
       return res.status(400).json({ success: false, msg: "Name, email, and role are required" });
@@ -245,7 +247,7 @@ export const createUser = async (req, res) => {
 
     // Validate faculty advisor fields
     if (role === "faculty_advisor") {
-      if (!advisor_department || !advisor_year) {
+      if (!advisor_department || !advisor_batch) {
         return res.status(400).json({
           success: false,
           msg: "Department and year are required for faculty advisors"
@@ -266,6 +268,7 @@ export const createUser = async (req, res) => {
       // Faculty Advisor fields
       advisor_department: role === "faculty_advisor" ? advisor_department : undefined,
       advisor_year: role === "faculty_advisor" ? parseInt(advisor_year) : undefined,
+      advisor_batch: role === "faculty_advisor" ? advisor_batch : undefined,
       isActive: true,
       roleHistory: [{
         role,
