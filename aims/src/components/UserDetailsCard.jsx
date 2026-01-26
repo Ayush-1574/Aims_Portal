@@ -68,8 +68,8 @@ export default function UserDetailsCard() {
                 <>
                   <DetailRow icon={Hash} label="Entry Number" value={user.entry_no} />
                   <DetailRow icon={Layers} label="Department" value={user.department} />
-                  <DetailRow icon={Calendar} label="Year" value={user.year ? `${user.year} Year` : "1st Year"} />
-                  <DetailRow icon={BookOpen} label="Semester" value={user.semester} />
+                  {/* <DetailRow icon={Calendar} label="Year" value={user.year ? `${user.year} Year` : "1st Year"} />
+                  <DetailRow icon={BookOpen} label="Semester" value={user.semester} /> */}
                 </>
               )}
 

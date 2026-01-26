@@ -165,6 +165,7 @@ export const getMe = async (req, res) => {
         semester: user.semester,
         advisor_department: user.advisor_department,
         advisor_year: user.advisor_year,
+        advisor_batch : user.advisor_batch,
         data: user.data,
       },
     });

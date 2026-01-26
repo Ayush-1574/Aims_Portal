@@ -11,15 +11,8 @@ import { toast } from "sonner";
 export default function CreateUser({ onUserCreated, onCancel }) {
   // 1. Cleaned State: Removed advisor_year
   const [formData, setFormData] = useState({
-    name: "", 
-    email: "", 
-    role: "student", 
-    entry_no: "",
-    department: "", 
-    year: "", 
-    semester: "", 
-    advisor_department: "", 
-    advisor_batch: "" // ✅ Only Batch needed for advisors
+    name: "", email: "", role: "student", entry_no: "",
+    department: "", year: "", semester: "", advisor_department: "", advisor_year: "", advisor_batch: "",
   });
 
   const [departments, setDepartments] = useState([]);
@@ -64,8 +57,7 @@ export default function CreateUser({ onUserCreated, onCancel }) {
         // 2. Reset form (Cleaned up)
         setFormData({
           name: "", email: "", role: "student", entry_no: "",
-          department: "", year: "", semester: "", 
-          advisor_department: "", advisor_batch: ""
+          department: "", year: "", semester: "", advisor_department: "", advisor_year: "", advisor_batch: "",
         });
         
         if (onUserCreated) onUserCreated();

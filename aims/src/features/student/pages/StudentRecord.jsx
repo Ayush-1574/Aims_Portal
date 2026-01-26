@@ -4,6 +4,8 @@ import { Award, Calendar, ChevronDown, ChevronUp, Trash2, Loader2, BookOpen } fr
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { dummyStudentRecord } from "@/dummy/dummyStudentRecord";
+
 
 export default function StudentRecord() {
   const [record, setRecord] = useState({ cgpa: 0, sessions: {} });
@@ -19,67 +21,87 @@ export default function StudentRecord() {
     'D': 4, 'F': 0 
   };
 
-  const loadData = async () => {
-    try {
-      const res = await fetchStudentRecord();
-      const enrollments = res?.data || [];
+const loadData = async () => {
+  try {
+    const res = await fetchStudentRecord();
+    const backendEnrollments = res?.data || [];
 
-      const grouped = {};
-      let totalCredits = 0;
-      let totalPoints = 0;
+    /* ---------- MERGE BACKEND + DUMMY ---------- */
+    const backendSessions = new Set(
+      backendEnrollments.map(e => e.session)
+    );
 
-      enrollments.forEach(entry => {
-        const sessionName = entry.session || "Unknown Session";
-        
-        if (!grouped[sessionName]) {
-          grouped[sessionName] = { 
-            courses: [], 
-            credits: 0, 
-            points: 0 
-          };
-        }
+    const mergedEnrollments = [
+      ...backendEnrollments,
+      ...dummyStudentRecord.filter(
+        d => !backendSessions.has(d.session)
+      )
+    ];
 
-        // FIX 1: Ensure credits is a Number to prevent string concatenation (e.g. "3"+"3" = "33")
-        const credits = Number(entry.course?.credits || 3);
-        const grade = entry.grade || "Pending";
-        
-        grouped[sessionName].courses.push({ ...entry, credits });
+    /* ---------- GROUPING + GPA ---------- */
+    const grouped = {};
+    let totalCredits = 0;
+    let totalPoints = 0;
 
-        // FIX 2: Strict Grade Check
-        // Only calculate if the grade is in our map (A-F). 
-        // This prevents 'S', 'W', 'Audit' from being counted as 0 points and ruining CGPA.
-        if (GRADE_MAP.hasOwnProperty(grade)) {
-          const points = GRADE_MAP[grade];
-          
-          grouped[sessionName].credits += credits;
-          grouped[sessionName].points += (points * credits);
-          
-          totalCredits += credits;
-          totalPoints += (points * credits);
-        }
+    mergedEnrollments.forEach(entry => {
+      const sessionName = entry.session || "Unknown Session";
+
+      if (!grouped[sessionName]) {
+        grouped[sessionName] = {
+          courses: [],
+          credits: 0,
+          points: 0
+        };
+      }
+
+      const credits = Number(entry.course?.credits || entry.credits || 3);
+      const grade = entry.grade || "Pending";
+
+      grouped[sessionName].courses.push({
+        ...entry,
+        credits
       });
 
-      // Calculate SGPA per session
-      Object.keys(grouped).forEach(key => {
-        const s = grouped[key];
-        s.sgpa = s.credits === 0 ? "0.00" : (s.points / s.credits).toFixed(2);
-      });
+      // Only valid grades affect GPA
+      if (GRADE_MAP.hasOwnProperty(grade)) {
+        const points = GRADE_MAP[grade];
 
-      // Calculate CGPA
-      const cgpa = totalCredits === 0 ? "0.00" : (totalPoints / totalCredits).toFixed(2);
-      
-      setRecord({ cgpa, sessions: grouped });
-      
-      const sessions = Object.keys(grouped).sort();
-      if (sessions.length > 0) setExpandedSession(sessions[sessions.length - 1]);
+        grouped[sessionName].credits += credits;
+        grouped[sessionName].points += points * credits;
 
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load records");
-    } finally {
-      setLoading(false);
+        totalCredits += credits;
+        totalPoints += points * credits;
+      }
+    });
+
+    /* ---------- SGPA ---------- */
+    Object.keys(grouped).forEach(session => {
+      const s = grouped[session];
+      s.sgpa =
+        s.credits === 0 ? "0.00" : (s.points / s.credits).toFixed(2);
+    });
+
+    /* ---------- CGPA ---------- */
+    const cgpa =
+      totalCredits === 0
+        ? "0.00"
+        : (totalPoints / totalCredits).toFixed(2);
+
+    setRecord({ cgpa, sessions: grouped });
+
+    /* ---------- Auto expand latest session ---------- */
+    const sessions = Object.keys(grouped).sort();
+    if (sessions.length > 0) {
+      setExpandedSession(sessions[sessions.length - 1]);
     }
-  };
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to load records");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     loadData();

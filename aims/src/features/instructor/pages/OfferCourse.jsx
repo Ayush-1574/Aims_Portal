@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+ 
 
 export default function OfferCourse() {
   const [formData, setFormData] = useState({
@@ -36,11 +37,11 @@ export default function OfferCourse() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [deptData, sessionData, courseData] = await Promise.all([
-           fetchGlobalData("DEPARTMENT"),
-           fetchGlobalData("SESSION"),
-           fetchGlobalData("COURSE_CODE")
-        ]);
+        const deptData = await fetchGlobalData("DEPARTMENT");
+        const sessionData = await fetchGlobalData("SESSION");
+        const courseData = await fetchGlobalData("COURSE_CODE");
+        
+       
         
         setDepartments(deptData.items || []);
         setSessions(sessionData.items || []);

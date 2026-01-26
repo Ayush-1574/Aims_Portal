@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import client from "@/core/api/client"; 
 import { Link } from "react-router-dom";
+
 import { 
   BookOpen, Users, ArrowRight, PlusCircle, Calendar, 
   Layers, GraduationCap, School, Search, FilterX, ListFilter
 } from "lucide-react";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,35 +15,43 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
+// NEW IMPORT
+import { fetchGlobalData } from "@/features/admin/api";
+
 export default function MyCourses() {
   const [courses, setCourses] = useState([]);
+  const [sessions, setSessions] = useState([]); // backend sessions
   const [loading, setLoading] = useState(true);
 
-  // Draft filters (what the user is typing/selecting)
   const [filters, setFilters] = useState({
     search: "",
     status: "ALL",
     session: "ALL"
   });
 
-  // Applied filters (what triggers the list to show)
   const [appliedFilters, setAppliedFilters] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const res = await client.get("/courses/my");
-        setCourses(res.data.courses || []);
+        const [courseRes, sessionRes] = await Promise.all([
+          client.get("/courses/my"),
+          fetchGlobalData("SESSION")
+        ]);
+
+        setCourses(courseRes.data.courses || []);
+        setSessions(sessionRes.items || []);
+
       } catch (err) {
-        console.error("Failed to load instructor courses", err);
+        console.error("Failed loading instructor data", err);
       } finally {
         setLoading(false);
       }
     };
+
     loadData();
   }, []);
 
-  // --- HANDLERS ---
   const handleInputChange = (e) => {
     setFilters(prev => ({ ...prev, search: e.target.value }));
   };
@@ -58,29 +68,25 @@ export default function MyCourses() {
   const handleReset = () => {
     const empty = { search: "", status: "ALL", session: "ALL" };
     setFilters(empty);
-    setAppliedFilters(null); // Return to empty state
+    setAppliedFilters(null);
     toast.info("Filters cleared");
   };
 
-  // --- FILTER LOGIC ---
   const filteredCourses = useMemo(() => {
-    if (!appliedFilters) return []; // Show nothing until search is clicked
+    if (!appliedFilters) return [];
 
     return courses.filter(course => {
-      // 1. Search (Code or Title)
-      const searchMatch = 
-        !appliedFilters.search || 
-        course.title.toLowerCase().includes(appliedFilters.search.toLowerCase()) || 
+      const searchMatch =
+        !appliedFilters.search ||
+        course.title.toLowerCase().includes(appliedFilters.search.toLowerCase()) ||
         course.courseCode.toLowerCase().includes(appliedFilters.search.toLowerCase());
 
-      // 2. Status Match
-      const statusMatch = 
-        appliedFilters.status === "ALL" || 
+      const statusMatch =
+        appliedFilters.status === "ALL" ||
         course.status === appliedFilters.status;
 
-      // 3. Session Match
-      const sessionMatch = 
-        appliedFilters.session === "ALL" || 
+      const sessionMatch =
+        appliedFilters.session === "ALL" ||
         course.session === appliedFilters.session;
 
       return searchMatch && statusMatch && sessionMatch;
@@ -95,49 +101,43 @@ export default function MyCourses() {
     );
   }
 
-  // Calculate unique sessions for dropdown
-  const availableSessions = [...new Set(courses.map(c => c.session))];
-
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
            <h1 className="text-3xl font-bold text-slate-900">My Teaching & Courses</h1>
            <p className="text-slate-500 mt-1">Manage your active courses and student enrollments.</p>
         </div>
         <Link to="/instructor/offer">
-          {/* UPDATED BUTTON COLOR: Matches dark slate theme */}
-          <Button className="gap-2 shadow-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold transition-all hover:scale-105 active:scale-95">
+          <Button className="gap-2 shadow-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold">
             <PlusCircle size={18} /> Offer New Course
           </Button>
         </Link>
       </div>
 
-      {/* --- FILTER BAR --- */}
       {courses.length > 0 && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            
-            {/* Search Input */}
+
+            {/* Search */}
             <div className="relative">
-               <Search className="absolute left-3 top-3 text-slate-400" size={16} />
-               <Input 
-                 placeholder="Search Code or Title..." 
-                 className="pl-9 bg-white" 
-                 value={filters.search}
-                 onChange={handleInputChange}
-               />
+              <Search className="absolute left-3 top-3 text-slate-400" size={16} />
+              <Input 
+                placeholder="Search Code or Title..."
+                className="pl-9 bg-white"
+                value={filters.search}
+                onChange={handleInputChange}
+              />
             </div>
 
-            {/* Status Select */}
+            {/* Status */}
             <Select value={filters.status} onValueChange={(val) => handleSelectChange("status", val)}>
               <SelectTrigger>
-                 <div className="flex items-center gap-2 text-slate-600">
-                    <ListFilter size={16} />
-                    <SelectValue placeholder="Status" />
-                 </div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <ListFilter size={16} />
+                  <SelectValue placeholder="Status" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Statuses</SelectItem>
@@ -147,125 +147,93 @@ export default function MyCourses() {
               </SelectContent>
             </Select>
 
-            {/* Session Select */}
+            {/* Session (backend global) */}
             <Select value={filters.session} onValueChange={(val) => handleSelectChange("session", val)}>
               <SelectTrigger>
-                 <div className="flex items-center gap-2 text-slate-600">
-                    <Calendar size={16} />
-                    <SelectValue placeholder="Session" />
-                 </div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Calendar size={16} />
+                  <SelectValue placeholder="Session" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Sessions</SelectItem>
-                {availableSessions.map(sess => (
-                  <SelectItem key={sess} value={sess}>{sess}</SelectItem>
+                {sessions.filter(s => s.isActive).map(sess => (
+                  <SelectItem key={sess._id} value={sess.key}>
+                    {sess.value}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
           </div>
 
-          {/* Action Buttons */}
           <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
-             <Button onClick={handleSearch} className="bg-slate-900 hover:bg-slate-800 text-white min-w-[140px]">
-               <Search size={16} className="mr-2" /> Search
-             </Button>
-             <Button variant="ghost" onClick={handleReset} className="text-slate-500 hover:text-slate-700">
-                <FilterX size={16} className="mr-2" /> Reset
-             </Button>
+            <Button onClick={handleSearch} className="bg-slate-900 text-white min-w-[140px]">
+              <Search size={16} className="mr-2" /> Search
+            </Button>
+            <Button variant="ghost" onClick={handleReset} className="text-slate-500">
+              <FilterX size={16} className="mr-2" /> Reset
+            </Button>
           </div>
         </div>
       )}
 
-      {/* --- CONTENT AREA --- */}
+      {/* Content area (unchanged) */}
       {courses.length === 0 ? (
-        // STATE 1: Instructor has NEVER created a course
         <div className="text-center py-20 bg-white border border-dashed border-slate-200 rounded-2xl">
           <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
             <BookOpen size={32} />
           </div>
           <h3 className="text-lg font-bold text-slate-700">No Courses Offered Yet</h3>
           <p className="text-slate-500 max-w-sm mx-auto mt-2 mb-6">
-            You haven't created any courses for this session. Click the button above to get started.
+            Click the button above to get started.
           </p>
         </div>
       ) : !appliedFilters ? (
-        // STATE 2: Search hasn't been clicked yet
         <div className="flex flex-col items-center justify-center py-24 text-center bg-white/50 rounded-2xl border-2 border-dashed border-slate-200">
-          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-            <Search className="text-blue-400" size={32} />
-          </div>
-          <h3 className="text-xl font-bold text-slate-900">Search your courses</h3>
-          <p className="text-slate-500 max-w-sm mt-2">
-            Use the filters above and click <b>Search</b> to view your offered courses.
-          </p>
+          <Search className="text-blue-400" size={32} />
+          <h3 className="text-xl font-bold text-slate-900 mt-3">Search your courses</h3>
+          <p className="text-slate-500 mt-2">Click <b>Search</b> to view.</p>
         </div>
       ) : filteredCourses.length === 0 ? (
-        // STATE 3: No Matches
         <div className="text-center py-20 bg-slate-50 rounded-2xl border border-slate-200">
-           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400 shadow-sm">
-             <Search size={24} />
-           </div>
+           <Search size={24} className="mx-auto mb-3 text-slate-400" />
            <h3 className="text-lg font-semibold text-slate-800">No matching courses</h3>
-           <p className="text-slate-500">Try adjusting your filters or search terms.</p>
         </div>
       ) : (
-        // STATE 4: Display Results
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-300">
-          {filteredCourses.map((course) => (
-            <Card key={course._id} className="group flex flex-col h-full bg-white border border-slate-200 hover:shadow-xl hover:border-blue-200 transition-all duration-300 overflow-hidden relative">
-               <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
-                 course.status === 'OPEN' ? 'bg-green-500' : 
-                 course.status === 'REJECTED' ? 'bg-red-500' : 'bg-amber-400'
-               }`} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCourses.map(course => (
+            <Card key={course._id} className="group flex flex-col h-full border border-slate-200 hover:shadow-xl duration-300">
+              <CardContent className="p-6">
+                <div className="flex justify-between mb-3">
+                  <Badge variant="outline" className="font-mono">{course.courseCode}</Badge>
+                  <Badge>{course.status}</Badge>
+                </div>
 
-               <CardContent className="p-6 pl-7 flex flex-col h-full">
-                 <div className="flex justify-between items-start mb-3">
-                    <Badge variant="outline" className="font-mono font-bold text-slate-700 bg-slate-50 border-slate-200">
-                      {course.courseCode}
-                    </Badge>
-                    <Badge className={`${
-                      course.status === 'OPEN' ? 'bg-green-100 text-green-700 hover:bg-green-100' : 
-                      course.status === 'REJECTED' ? 'bg-red-100 text-red-700 hover:bg-red-100' :
-                      'bg-amber-100 text-amber-700 hover:bg-amber-100'
-                    }`}>
-                      {course.status === 'PENDING_APPROVAL' ? 'Pending' : course.status}
-                    </Badge>
-                 </div>
+                <h3 className="text-lg font-bold mb-3">{course.title}</h3>
 
-                 <h3 className="text-xl font-bold text-slate-900 mb-4 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
-                   {course.title}
-                 </h3>
+                <div className="text-xs space-y-2 mb-6">
+                  <div className="flex items-center gap-2">
+                    <School size={14} /><span>{course.dept}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar size={14} /><span>{course.session}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Layers size={14} /><span>{course.ltp}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* <GraduationCap size={14} /><span>Year {course.year}</span> */}
+                  </div>
+                </div>
 
-                 <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs text-slate-600 bg-slate-50/50 p-3 rounded-xl border border-slate-100 mb-6">
-                    <div className="flex items-center gap-2">
-                        <School size={14} className="text-blue-500 shrink-0"/>
-                        <span className="font-semibold truncate" title={course.dept}>{course.dept} Dept</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <GraduationCap size={14} className="text-purple-500 shrink-0"/>
-                        <span>Year {course.year}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Calendar size={14} className="text-orange-500 shrink-0"/>
-                        <span>{course.session}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Layers size={14} className="text-indigo-500 shrink-0"/>
-                        <span className="font-mono">{course.ltp}</span>
-                    </div>
-                 </div>
-
-                 <div className="mt-auto pt-4 border-t border-slate-50">
-                    <Link to={`/instructor/enrolled/${course._id}`}>
-                        <Button variant="outline" className="w-full justify-between group-hover:border-blue-500 group-hover:text-blue-600 transition-all">
-                           <span className="flex items-center gap-2">
-                               <Users size={16} /> Manage Students
-                           </span>
-                           <ArrowRight size={16} />
-                        </Button>
-                    </Link>
-                 </div>
-               </CardContent>
+                <Link to={`/instructor/enrolled/${course._id}`}>
+                  <Button variant="outline" className="w-full flex justify-between">
+                    <span><Users size={16} className="inline mr-2"/>Manage Students</span>
+                    <ArrowRight size={16} />
+                  </Button>
+                </Link>
+              </CardContent>
             </Card>
           ))}
         </div>
