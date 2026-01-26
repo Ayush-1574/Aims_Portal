@@ -35,3 +35,6 @@ export const submitFeedback = (data) =>
 export const fetchCurrentSessionEnrollments = () =>
   client.get("/enrollment/my/current-session")
         .then(res => res.data.data);
+
+export const dropCourseStudent = (enrollmentId) =>
+  client.patch(`/enrollment/drop/student/${enrollmentId}`);

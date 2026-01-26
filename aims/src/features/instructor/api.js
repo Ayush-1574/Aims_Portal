@@ -42,3 +42,6 @@ export const updateStudentGrade = async (enrollmentId, payload) => {
 // Instructor views feedback dashboard
 export const getInstructorFeedback = () =>
   client.get("/feedback/instructor");
+
+export const dropStudentFaculty = (enrollmentId) =>
+  client.patch(`/enrollment/drop/faculty/${enrollmentId}`);

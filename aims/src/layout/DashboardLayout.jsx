@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/core/context/AuthContext";
 import { 
@@ -11,6 +11,7 @@ import { getFeedbackStatus } from "@/features/admin/api";
 export default function DashboardLayout({ role, children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [feedbackActive, setFeedbackActive] = useState(false);
+  
   const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -19,6 +20,13 @@ export default function DashboardLayout({ role, children }) {
     logout();
     navigate("/login");
   };
+  useEffect(() => {
+    if (role === "student") {
+      getFeedbackStatus()
+        .then(res => setFeedbackActive(res.active))
+        .catch(() => setFeedbackActive(false));
+    }
+  }, [role]);
 
   const getLinks = (userRole) => {
     switch (userRole) {
@@ -50,7 +58,7 @@ export default function DashboardLayout({ role, children }) {
 
       case "faculty_advisor":
         return [
-          { icon: CheckSquare, label: "Course Approvals", path: "/advisor/courses" },
+          // { icon: CheckSquare, label: "Course Approvals", path: "/advisor/courses" },
           { icon: Users, label: "Student Enrollments", path: "/advisor/enrollments" },
           { icon: Activity, label: "System Status", path: "/advisor/status" },
         ];
