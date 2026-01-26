@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   // Faculty Advisor specific fields
   advisor_department: { type: String }, // department they advise
   advisor_year: { type: Number }, // which year they advise
-  
+  advisor_batch: { type: String},
   // Generic field for any role-specific data
   data: Object,
   
