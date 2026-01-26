@@ -14,37 +14,38 @@ const enrollmentSchema = new mongoose.Schema(
       required: true
     },
 
+    // Faculty advisor who approves (mapped by student's year + department)
     faculty_advisor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
     },
 
-    status: {
-      type: String,
-      enum: [
-        "REQUESTED",
-        "PENDING_INSTRUCTOR",
-        "PENDING_ADVISOR",
-        "ENROLLED",
-        "REJECTED"
-      ],
-      default: "PENDING_INSTRUCTOR"
-    },
+    // NEW — unified state machine for workflow
+   status: {
+  type: String,
+  enum: [
+    "PENDING_INSTRUCTOR",
+    "PENDING_ADVISOR",
+    "ENROLLED",
+    "DROPPED_STUDENT",
+    "DROPPED_FACULTY",
+    "REJECTED"
+  ],
+  default: "PENDING_INSTRUCTOR"
+},
+    droppedBy: {
+    type: String,
+    enum: ["student", "faculty"],
+    default: null
+  },
 
-    // ✅ NEW — academic term like "2025-I"
-    session: {
-      type: String,
-      required: true
-    },
-
+    // For Record view
     semester: { type: Number, default: 1 },
-    category: { type: String, default: "Core" },
+    category: { type: String, default: "Core" }, // Elective/HSS/etc.
     grade: { type: String, default: "-" },
     attendance: { type: String, default: "-" }
   },
   { timestamps: true }
 );
-
-enrollmentSchema.index({ student: 1, course: 1, session: 1 }, { unique: true });
 
 export default mongoose.model("Enrollment", enrollmentSchema);

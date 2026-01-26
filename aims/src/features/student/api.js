@@ -19,6 +19,7 @@ export const fetchStudentRecord = async () => {
   // Backend returns { success: true, data: [...] }
   return res.data; 
 };
+
 // Check if feedback is open
 export const getFeedbackStatus = () =>
   client.get("/system/feedback-status").then(r => r.data);
@@ -30,3 +31,10 @@ export const getFeedbackSession = () =>
 // Submit feedback (anonymous)
 export const submitFeedback = (data) =>
   client.post("/feedback", data);
+
+export const fetchCurrentSessionEnrollments = () =>
+  client.get("/enrollment/my/current-session")
+        .then(res => res.data.data);
+
+export const dropCourseStudent = (enrollmentId) =>
+  client.patch(`/enrollment/drop/student/${enrollmentId}`);

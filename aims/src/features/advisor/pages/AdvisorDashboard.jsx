@@ -9,7 +9,7 @@ export default function AdvisorDashboard() {
   return (
     <DashboardLayout role="faculty_advisor">
       <Routes>
-        <Route index element={<Navigate to="courses" replace />} />
+        <Route index element={<Navigate to="enrollments" replace />} />
         <Route path="enrollments" element={<EnrollmentRequests />} />
         <Route path="status" element={<CourseStatus />} />
         <Route path="*" element={<Navigate to="courses" replace />} />

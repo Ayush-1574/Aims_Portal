@@ -3,6 +3,7 @@ import Course from "../models/CourseModel.js";
 import User from "../models/Auth/UserModel.js";
 
 // STUDENT: request enrollment
+// STUDENT: request enrollment
 export const requestEnrollment = async (req, res) => {
   try {
     const { courseId } = req.body;
@@ -14,13 +15,30 @@ export const requestEnrollment = async (req, res) => {
     } 
 
     const existing = await Enrollment.findOne({
-      course: courseId,
-      student: req.user.userId
-    });
+  course: courseId,
+  student: req.user.userId
+});
 
-    if (existing) {
-      return res.status(400).json({ success: false, msg: "Already requested" });
-    }
+if (existing) {
+  // ❌ Dropped by faculty → permanently blocked
+  if (existing.status === "DROPPED_FACULTY") {
+    return res.status(403).json({
+      success: false,
+      msg: "You were dropped by faculty. Re-enrollment not allowed."
+    });
+  }
+
+  // ✅ Dropped by student → allow re-enroll
+  if (existing.status === "DROPPED_STUDENT") {
+    await Enrollment.findByIdAndDelete(existing._id);
+  } else {
+    return res.status(400).json({
+      success: false,
+      msg: "Already requested or enrolled"
+    });
+  }
+}
+
 
     // Fetch course to get session
     const course = await Course.findById(courseId);
@@ -49,7 +67,6 @@ export const requestEnrollment = async (req, res) => {
     return res.status(500).json({ success: false, msg: err.message });
   }
 };
-
 
 // INSTRUCTOR: approve
 export const instructorApproveEnrollment = async (req, res) => {
@@ -132,7 +149,7 @@ export const getInstructorEnrollRequests = async (req, res) => {
       course: { $in: courseIds },
       status: "PENDING_INSTRUCTOR"
     })
-      .populate("student", "name email")
+      .populate("student", "name email year department")
       .populate("course", "courseCode title session");
 
     return res.json({ success: true, data });
@@ -225,5 +242,98 @@ export const updateEnrollmentRecord = async (req, res) => {
 
   } catch (err) {
     return res.status(500).json({ success: false, msg: err.message });
+  }
+};
+
+import SystemSettings from "../models/SystemSettingsModel.js";
+
+export const getMyCurrentSessionEnrollments = async (req, res) => {
+  try {
+    // Get current session set by admin
+    const sessionSetting = await SystemSettings.findOne({
+      key: "feedback_session"
+    });
+
+    if (!sessionSetting) {
+      
+      return res.json({ success: true, data: [] });
+    }
+
+    const currentSession = sessionSetting.value;
+   // console.log("Current session:", currentSession);
+
+
+    const data = await Enrollment.find({
+      student: req.user.userId,
+      status: "ENROLLED"
+    }).populate({
+      path: "course",
+      match: { session: currentSession }
+    });
+
+    
+    // Remove non-matching populated docs
+    const filtered = data
+      .filter(e => e.course)
+      .map(e => ({
+        id: e._id,
+        courseId: e.course._id,
+        code: e.course.courseCode,
+        title: e.course.title,
+        session: e.course.session
+      }));
+
+    res.json({ success: true, data: filtered , msg : "hello" });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: err.message });
+  }
+};
+export const studentDropCourse = async (req, res) => {
+  const enrollment = await Enrollment.findOne({
+    _id: req.params.id,
+    student: req.user.userId,
+    status: "ENROLLED"
+  });
+
+  if (!enrollment) {
+    return res.status(400).json({ msg: "Enrollment not found" });
+  }
+
+  enrollment.status = "DROPPED_STUDENT";
+  enrollment.droppedBy = "student";
+  await enrollment.save();
+
+  res.json({ success: true });
+};
+
+export const facultyDropStudent = async (req, res) => {
+  try {
+    const enrollment = await Enrollment.findById(req.params.id);
+
+    if (!enrollment) {
+      return res.status(404).json({
+        success: false,
+        msg: "Enrollment not found"
+      });
+    }
+
+    // Optional safety: ensure only ENROLLED students can be dropped
+    if (enrollment.status !== "ENROLLED") {
+      return res.status(400).json({
+        success: false,
+        msg: "Student is not currently enrolled"
+      });
+    }
+
+    enrollment.status = "DROPPED_FACULTY";
+    enrollment.droppedBy = "faculty";
+    await enrollment.save();
+
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      msg: err.message
+    });
   }
 };

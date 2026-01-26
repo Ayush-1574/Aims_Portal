@@ -20,9 +20,11 @@ export default function AdminFeedbackSettings() {
     "2023-24-I",
     "2023-24-II",
     "2024-25-I",
-    "2024-25-II"
+    "2026-I",
+    "2025-I"
   ];
 
+  /* -------- Load current settings -------- */
   const loadData = async () => {
     try {
       const statusRes = await getFeedbackStatus();
@@ -41,6 +43,7 @@ export default function AdminFeedbackSettings() {
     loadData();
   }, []);
 
+  /* -------- Save settings -------- */
   const saveSettings = async () => {
     setSaving(true);
     try {
@@ -60,6 +63,7 @@ export default function AdminFeedbackSettings() {
 
   return (
     <div className="max-w-3xl mx-auto pb-20 space-y-6 animate-fade-in">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Feedback Settings</h1>
         <p className="text-gray-500">
@@ -67,6 +71,7 @@ export default function AdminFeedbackSettings() {
         </p>
       </div>
 
+      {/* Card */}
       <Card className="shadow-sm">
         <CardContent className="p-6 space-y-6">
           {/* Toggle */}
@@ -77,7 +82,13 @@ export default function AdminFeedbackSettings() {
                 Students can submit feedback only when enabled
               </p>
             </div>
-            <Switch checked={active} onCheckedChange={setActive} />
+           <button
+  onClick={() => setActive(!active)}
+  className="px-4 py-2 border rounded"
+>
+  {active ? "ON" : "OFF"}
+</button>
+
           </div>
 
           {/* Session Selector */}
@@ -103,11 +114,11 @@ export default function AdminFeedbackSettings() {
             </p>
           </div>
 
-          {/* Save */}
+          {/* Save Button */}
           <div className="flex justify-end">
             <Button
               onClick={saveSettings}
-              disabled={!active || !session || saving}
+              disabled={saving || (active && !session)}
               isLoading={saving}
             >
               Save Settings

@@ -11,7 +11,10 @@ import {
   getInstructorEnrollRequests,
   getAdvisorEnrollRequests,
   getEnrolledStudents,
-    updateEnrollmentRecord
+    updateEnrollmentRecord,
+    studentDropCourse,
+    facultyDropStudent,
+    getMyCurrentSessionEnrollments
 
 } from "../controllers/enrollmentController.js";
 
@@ -96,5 +99,24 @@ router.patch(
   allowRoles("instructor"),
   updateEnrollmentRecord
 );
+router.get(
+  "/my/current-session",
+  auth,
+  allowRoles("student"),
+  getMyCurrentSessionEnrollments
+);
 
+router.patch(
+  "/drop/student/:id",
+  auth,
+  allowRoles("student"),
+  studentDropCourse
+);
+
+router.patch(
+  "/drop/faculty/:id",
+  auth,
+  allowRoles("instructor"),
+  facultyDropStudent
+);
 export default router;
