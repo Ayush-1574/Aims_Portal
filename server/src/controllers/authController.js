@@ -67,18 +67,18 @@ export const sendOtp = async (req, res) => {
 // 2️⃣ VERIFY OTP (LOGIN)
 export const verifyOtp = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email,otp } = req.body;
 
     // OTP verification skipped (as in your original code)
     
     // Extract base email for OTP verification (remove +X modifier if present)
-    //const baseEmail = getBaseEmail(email);
+    const baseEmail = getBaseEmail(email);
 
-    // const record = await Otp.findOne({ email: baseEmail, otp });
+    const record = await Otp.findOne({ email: baseEmail, otp });
 
-    // if (!record || record.expiresAt < new Date()) {
-    //   return res.status(400).json({ success: false, msg: "Invalid or expired OTP" });
-    // }
+    if (!record || record.expiresAt < new Date()) {
+      return res.status(400).json({ success: false, msg: "Invalid or expired OTP" });
+    }
 
     // Look up user by FULL email (with +X modifier if provided)
     // This allows different +X variants to be different users
