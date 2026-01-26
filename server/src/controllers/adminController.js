@@ -298,7 +298,7 @@ export const getGlobalData = async (req, res) => {
     const { type } = req.params;
 
     // Validate type
-    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE"];
+    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE", "COURSE_CODE"];
     if (!validTypes.includes(type.toUpperCase())) {
       return res.status(400).json({ success: false, msg: "Invalid data type" });
     }
@@ -342,7 +342,7 @@ export const createGlobalData = async (req, res) => {
     }
 
     // Validate type
-    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE"];
+    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE", "COURSE_CODE"];
     if (!validTypes.includes(type.toUpperCase())) {
       return res.status(400).json({ success: false, msg: "Invalid data type" });
     }
@@ -397,7 +397,7 @@ export const updateGlobalData = async (req, res) => {
     const { value, isActive } = req.body;
 
     // Validate type
-    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE"];
+    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE", "COURSE_CODE"];
     if (!validTypes.includes(type.toUpperCase())) {
       return res.status(400).json({ success: false, msg: "Invalid data type" });
     }
@@ -435,7 +435,7 @@ export const deleteGlobalData = async (req, res) => {
     const { type, itemId } = req.params;
 
     // Validate type
-    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE"];
+    const validTypes = ["DEPARTMENT", "SESSION", "CATEGORY", "GRADE_SCALE", "COURSE_CODE"];
     if (!validTypes.includes(type.toUpperCase())) {
       return res.status(400).json({ success: false, msg: "Invalid data type" });
     }

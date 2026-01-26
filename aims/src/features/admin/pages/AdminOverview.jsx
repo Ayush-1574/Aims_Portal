@@ -15,6 +15,7 @@ export default function AdminOverview() {
   const [loading, setLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [courses, setCourses] = useState([]);
 
   // Mock Activity Data (Placeholder for real logs)
   const recentActivity = [
@@ -30,13 +31,16 @@ export default function AdminOverview() {
         const data = await fetchDashboardStats();
         setStats(data);
         
-        // Load departments and sessions
+        // Load departments, sessions, and courses
         const deptData = await fetchGlobalData("DEPARTMENT");
         const sessionData = await fetchGlobalData("SESSION");
+        const courseData = await fetchGlobalData("COURSE_CODE");
         console.log("Admin Overview - Depts:", deptData);
         console.log("Admin Overview - Sessions:", sessionData);
+        console.log("Admin Overview - Courses:", courseData);
         setDepartments(deptData.items || []);
         setSessions(sessionData.items || []);
+        setCourses(courseData.items || []);
       } catch (err) {
         console.error("Failed to load stats:", err);
       } finally {
@@ -169,21 +173,21 @@ export default function AdminOverview() {
           </Card>
 
           {/* Global Data Summary */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <Card className="border-slate-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-bold text-slate-700">Active Departments</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {departments.filter(d => d.isActive).slice(0, 4).map((dept) => (
+                  {departments.filter(d => d.isActive).slice(0, 3).map((dept) => (
                     <div key={dept._id} className="flex items-center gap-2 text-sm">
                       <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
                       <span className="text-slate-700">{dept.value}</span>
                     </div>
                   ))}
-                  {departments.filter(d => d.isActive).length > 4 && (
-                    <p className="text-xs text-slate-500 mt-2">+{departments.filter(d => d.isActive).length - 4} more</p>
+                  {departments.filter(d => d.isActive).length > 3 && (
+                    <p className="text-xs text-slate-500 mt-2">+{departments.filter(d => d.isActive).length - 3} more</p>
                   )}
                 </div>
               </CardContent>
@@ -195,14 +199,33 @@ export default function AdminOverview() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {sessions.filter(s => s.isActive).slice(0, 4).map((session) => (
+                  {sessions.filter(s => s.isActive).slice(0, 3).map((session) => (
                     <div key={session._id} className="flex items-center gap-2 text-sm">
                       <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
                       <span className="text-slate-700">{session.value}</span>
                     </div>
                   ))}
-                  {sessions.filter(s => s.isActive).length > 4 && (
-                    <p className="text-xs text-slate-500 mt-2">+{sessions.filter(s => s.isActive).length - 4} more</p>
+                  {sessions.filter(s => s.isActive).length > 3 && (
+                    <p className="text-xs text-slate-500 mt-2">+{sessions.filter(s => s.isActive).length - 3} more</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold text-slate-700">Available Courses</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {courses.filter(c => c.isActive).slice(0, 3).map((course) => (
+                    <div key={course._id} className="flex items-center gap-2 text-sm">
+                      <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
+                      <span className="text-slate-700">{course.key} - {course.value}</span>
+                    </div>
+                  ))}
+                  {courses.filter(c => c.isActive).length > 3 && (
+                    <p className="text-xs text-slate-500 mt-2">+{courses.filter(c => c.isActive).length - 3} more</p>
                   )}
                 </div>
               </CardContent>

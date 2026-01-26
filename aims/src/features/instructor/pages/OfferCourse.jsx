@@ -16,23 +16,26 @@ export default function OfferCourse() {
   });
   
   const [loading, setLoading] = useState(false);
-  // Status state for inline feedback (optional, since we use toast)
   const [status, setStatus] = useState({ type: "", msg: "" });
   const [departments, setDepartments] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [courses, setCourses] = useState([]);
 
-  // Load departments and sessions on mount
+  // Load departments, sessions, and courses on mount
   useEffect(() => {
     const loadData = async () => {
       try {
         const deptData = await fetchGlobalData("DEPARTMENT");
         const sessionData = await fetchGlobalData("SESSION");
+        const courseData = await fetchGlobalData("COURSE_CODE");
         
         console.log("Dept Data:", deptData);
         console.log("Session Data:", sessionData);
+        console.log("Course Data:", courseData);
         
         setDepartments(deptData.items || []);
         setSessions(sessionData.items || []);
+        setCourses(courseData.items || []);
         
         // Set default session if available
         if (sessionData.items && sessionData.items.length > 0) {
@@ -45,11 +48,17 @@ export default function OfferCourse() {
     loadData();
   }, []);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-  
-  // Special handler for the Select component
-  const handleSelectChange = (value) => {
-    setFormData({ ...formData, dept: value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Auto-fill title when course code is selected
+    if (name === "courseCode") {
+      const selectedCourse = courses.find(c => c.key === value);
+      if (selectedCourse) {
+        setFormData(prev => ({ ...prev, courseCode: value, title: selectedCourse.value }));
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -105,14 +114,32 @@ export default function OfferCourse() {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Core Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2 col-span-2">
-                <Label>Course Title</Label>
-                <Input name="title" placeholder="e.g. Advanced Data Structures" value={formData.title} onChange={handleChange} required />
+              <div className="space-y-2">
+                <Label>Course Code</Label>
+                <select 
+                  name="courseCode" 
+                  value={formData.courseCode} 
+                  onChange={handleChange}
+                  className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  required
+                >
+                  <option value="">Select Course Code</option>
+                  {courses.filter(c => c.isActive).map(course => (
+                    <option key={course._id} value={course.key}>{course.key}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">
-                <Label>Course Code</Label>
-                <Input name="courseCode" placeholder="e.g. CS101" value={formData.courseCode} onChange={handleChange} required />
+                <Label>Course Title</Label>
+                <Input 
+                  name="title" 
+                  placeholder="Auto-filled from course selection" 
+                  value={formData.title} 
+                  readOnly
+                  className="bg-slate-50 cursor-not-allowed"
+                  required 
+                />
               </div>
 
               <div className="space-y-2">

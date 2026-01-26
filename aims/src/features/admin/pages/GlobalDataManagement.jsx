@@ -24,7 +24,7 @@ export default function GlobalDataManagement() {
   const tabs = [
     { type: "DEPARTMENT", label: "Departments" },
     { type: "SESSION", label: "Sessions" },
-    { type: "GRADE_SCALE", label: "Grade Scales" }
+    { type: "COURSE_CODE", label: "Courses" }
   ];
 
   // Load data for active tab
@@ -154,7 +154,7 @@ export default function GlobalDataManagement() {
                 <Label htmlFor="key">Key/Code</Label>
                 <Input
                   id="key"
-                  placeholder={activeTab === "DEPARTMENT" ? "e.g., CSE" : activeTab === "SESSION" ? "e.g., 2025-I" : "e.g., A"}
+                  placeholder={activeTab === "DEPARTMENT" ? "e.g., CSE" : activeTab === "SESSION" ? "e.g., 2025-I" : activeTab === "COURSE_CODE" ? "e.g., CS101" : "e.g., A"}
                   value={formData.key}
                   onChange={(e) => setFormData({ ...formData, key: e.target.value })}
                   disabled={editingItemId !== null}
@@ -166,7 +166,7 @@ export default function GlobalDataManagement() {
                 <Label htmlFor="value">Display Value</Label>
                 <Input
                   id="value"
-                  placeholder={activeTab === "DEPARTMENT" ? "e.g., Computer Science & Engineering" : activeTab === "SESSION" ? "e.g., Spring 2025" : "e.g., Excellent"}
+                  placeholder={activeTab === "DEPARTMENT" ? "e.g., Computer Science & Engineering" : activeTab === "SESSION" ? "e.g., Spring 2025" : activeTab === "COURSE_CODE" ? "e.g., Data Structures" : "e.g., Excellent"}
                   value={formData.value}
                   onChange={(e) => setFormData({ ...formData, value: e.target.value })}
                   required

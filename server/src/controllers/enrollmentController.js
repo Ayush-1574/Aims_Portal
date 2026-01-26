@@ -22,6 +22,12 @@ export const requestEnrollment = async (req, res) => {
       return res.status(400).json({ success: false, msg: "Already requested" });
     }
 
+    // Fetch course to get session
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ success: false, msg: "Course not found" });
+    }
+
     // Find faculty advisor with matching department and year
     const advisor = await User.findOne({
       role: "faculty_advisor",
@@ -32,6 +38,7 @@ export const requestEnrollment = async (req, res) => {
     const record = await Enrollment.create({
       course: courseId,
       student: req.user.userId,
+      session: course.session,
       faculty_advisor: advisor?._id || null,
       status: "PENDING_INSTRUCTOR"
     });

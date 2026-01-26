@@ -23,7 +23,7 @@ const globalDataSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["DEPARTMENT", "SESSION", "GRADE_SCALE"],
+      enum: ["DEPARTMENT", "SESSION", "GRADE_SCALE", "COURSE_CODE"],
       unique: true
     },
 
