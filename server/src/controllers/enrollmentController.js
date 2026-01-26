@@ -7,9 +7,10 @@ import User from "../models/Auth/UserModel.js";
 export const requestEnrollment = async (req, res) => {
   try {
     const { courseId } = req.body;
-
+   
     // Get student details to find matching faculty advisor
     const student = await User.findById(req.user.userId);
+    console.log(student)
     if (!student) {
       return res.status(404).json({ success: false, msg: "Student not found" });
     } 
@@ -45,7 +46,7 @@ if (existing) {
     if (!course) {
       return res.status(404).json({ success: false, msg: "Course not found" });
     }
-    const batch = student.entryNumber.substring(0, 4);
+    const batch = student.entry_no.substring(0, 4);
     // Find faculty advisor with matching department and year
     const advisor = await User.findOne({
       role: "faculty_advisor",
