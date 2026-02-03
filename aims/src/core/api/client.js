@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create the axios instance
 const client = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://aims-portal-ircp.onrender.com",
   withCredentials: true, // ✅ REQUIRED to send cookies
   headers: {
     "Content-Type": "application/json",
