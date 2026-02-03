@@ -20,7 +20,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "*",
+    origin: "https://aims-portal-web.vercel.app",
     credentials: true,   // ✅ REQUIRED for cookies
     methods: ["GET", "POST", "PUT", "DELETE" , "PATCH"],
   })
