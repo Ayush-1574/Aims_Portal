@@ -18,15 +18,21 @@ connectDB();
 
 const app = express();
 
-app.use(
-  cors({
-    origin: [
-      "https://aims-portal-web.vercel.app",
-      /\.vercel\.app$/
-    ],
-    credentials: true
-  })
-);
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // allow server-to-server
+
+    if (
+      origin === "https://aims-portal-web.vercel.app" ||
+      origin.endsWith(".vercel.app")
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("CORS not allowed"), false);
+  },
+  credentials: true
+}));
 
 
 app.use(cookieParser());
@@ -44,6 +50,5 @@ app.use("/global-data", globalDataRoutes);
 app.use("/admin", adminRoutes);
 app.use("/system", systemRoutes);
 app.use("/feedback", feedbackRoutes);
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log("Server running on port 5000"));
